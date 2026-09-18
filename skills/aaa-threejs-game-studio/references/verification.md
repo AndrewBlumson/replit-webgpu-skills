@@ -1,0 +1,143 @@
+# Verification and rendered acceptance
+
+Use this sequence for builds, major changes, and defect fixes. Scale the breadth to the change, but never replace live rendered evidence with build output, source inspection, a screenshot, a particle count, or another agent’s report.
+
+## Evidence contract
+
+Before testing, record:
+
+- absolute project path, branch/commit or working-tree identifier, and active writer;
+- exact build command and served artefact;
+- acceptance URL, route, query flags, seed/scenario, and save-state precondition;
+- Three.js and critical dependency versions;
+- the official-source check showing whether those resolved versions were latest stable when the project or major rebuild began;
+- browser version, OS, GPU, viewport, DPR, target input device, and audio output;
+- whether the run is cold, warm-cache, development, or production;
+- the acceptance requirement each capture or metric proves.
+
+Keep deterministic QA controls behind an explicit development boundary. They may select a seed, scenario, checkpoint, enemy state, weather intensity, or overlay, but must not alter production behaviour in an accepted build.
+
+## Gate 1 — static and build integrity
+
+Run the repository’s existing formatter, typecheck, unit/system tests, and production build. Inspect rather than guess:
+
+- package lock and exact `three` version;
+- latest-stable Three.js verification for a new project or major rebuild, with any existing-project migration exception documented;
+- imports from `three/webgpu` and `three/tsl`;
+- no `WebGLRenderer`, legacy `EffectComposer`, `ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile`, or other old rendering path in the product; migrate or remove one found in existing work rather than preserving it as a compatibility branch;
+- asset URLs and case sensitivity;
+- licences/provenance for every shipped third-party asset, font, library, and sound;
+- production bundle does not expose debug cheats, source-only credentials, or intrusive telemetry.
+
+A successful gate allows browser testing; it is not completion.
+
+## Gate 2 — cold-start runtime contract
+
+Open the exact URL in a visible target browser with a clean navigation. Verify:
+
+- loading/progress state appears and remains honest;
+- unsupported WebGPU produces a clear product-level failure state;
+- after `await renderer.init()`, the active backend is WebGPU and no silent WebGL2 fallback is accepted;
+- the device is latest-generation Apple Silicon or an equivalently capable current high-end PC; unsupported and legacy hardware reaches the designed capability-failure state rather than a compatibility renderer;
+- initial resize/DPR/canvas dimensions are correct;
+- audio unlock and pointer-lock requests occur only after a valid user gesture;
+- first controllable frame has no uncaught exception, relevant warning, missing asset, shader error, or rejected promise;
+- the player, camera, objective, collision world, and required assets are ready before control is granted.
+
+Capture console evidence and the opening frame after control is genuinely available.
+
+## Gate 3 — complete playable route
+
+Follow `docs/QA-ROUTE.md` with player-like input. Do not teleport past untested beats unless a separate deterministic scenario exists for focused repetition.
+
+Verify:
+
+- movement, look, jump/crouch/sprint or genre-equivalent verbs;
+- controller behaviour on slopes, steps, doorways, corners, moving geometry, ceilings, ledges, spawn points, and out-of-bounds edges;
+- camera collision, FOV/state transitions, weapon or avatar presentation;
+- interaction/combat cadence, hit authority, feedback, resources, cooldowns, and repeated use;
+- AI perception, navigation, attack choice, reaction, interruption, death/resolve, and loss/reacquisition;
+- encounter and objective triggers cannot be skipped, double-fired, soft-locked, or completed in the wrong order;
+- checkpoint, failure, restart, pause, settings, and final completion state;
+- bindings, sensitivity/dead-zone/inversion, FOV/camera, subtitles, volume buses, and reduced shake/flash or motion controls required by the brief;
+- the route ends visibly and audibly rather than returning to an unexplained still scene.
+
+Replay once using an adversarial route: hug boundaries, backtrack, trigger events out of the intended timing, exhaust resources, pause during action, and retry after failure.
+
+## Gate 4 — presentation inspection
+
+Inspect the Textured/Surface/Base/Normal/ORM/Emissive/Wire or equivalent diagnostic views when material defects are suspected. Then judge the composite from gameplay camera and representative display conditions.
+
+Capture at least:
+
+- opening composition and objective readability;
+- hero environment/material at close and gameplay distance;
+- core interaction or combat under pressure;
+- animation transition and impact reaction;
+- weather/environmental interaction with surfaces and occlusion;
+- peak set piece and its aftermath;
+- failure/restart and completion state;
+- HUD/settings at wide and narrow supported aspect ratios.
+
+Check causal coherence: impacts originate at contacts, rain respects shelter when specified, smoke has source and wind behaviour, lights belong to fixtures/events, reflections match the local state, and audio emitters occupy plausible space.
+
+When matching a capability reference, compare the same observable axes—camera context, screen coverage, depth, motion, surface response, interaction, and exposure. Do not compare only a source-code technique or object count.
+
+## Gate 5 — performance at the worst beat
+
+Choose a frame-rate contract before measuring: 60 fps provides 16.67 ms total frame time; 30 fps provides 33.33 ms. Define target hardware and an allowed percentile/stability policy. Separate:
+
+- CPU frame/main-thread time;
+- GPU render/compute timestamp when the optional feature is available;
+- frame pacing and long-frame/hitch count;
+- draw calls, visible triangles/points/lines, render/compute calls;
+- tracked GPU resource sizes and counts;
+- initial and streamed transfer sizes;
+- time to first frame and time to controllable;
+- shader/pipeline first-use stalls.
+
+Measure a sustained worst-case route segment, not a quiet opening view. Use `renderer.info` as a diagnosis aid, browser tooling for main-thread/network/memory evidence, and backend timestamp data when supported. No single overlay number proves performance or quality.
+
+If over budget, diagnose before reducing fidelity:
+
+- CPU: scripting, physics, AI, animation, scene traversal, allocations, draw submission;
+- GPU geometry: vertex/fragment cost, shadows, skinning, overdraw, culling, resolution;
+- GPU bandwidth: texture/target formats, MRT count, post passes, transparent layers;
+- hitching: asset decode/upload, shader/pipeline creation, synchronous work, garbage collection;
+- transfer/startup: unpartitioned assets, texture formats, preload policy, cache headers.
+
+Record the change, quality cost, and before/after route measurement.
+
+## Gate 6 — warm-up and lifecycle
+
+Exercise every representative material, light/shadow variant, skinned/morphed character, particle/compute pipeline, and post path before the first latency-sensitive use. `compileAsync()` is necessary for scene materials but may not cover every dynamically constructed or post-processing path; prove the actual encounter is hitch-free.
+
+Then run at least two cycles of:
+
+1. enter or start;
+2. exercise combat/effects/audio;
+3. pause and blur/focus;
+4. resize or change DPR where supported;
+5. fail/restart or leave/re-enter;
+6. complete and return/reset.
+
+Check that cycles do not duplicate animation loops, DOM/event listeners, physics bodies, AI entities, mixers, audio nodes, GPU buffers/textures, render targets, compute nodes, or post pipelines. Verify explicit disposal and cancelled async work cannot mutate a dead session.
+
+## Gate 7 — release route
+
+Test the built deployment, not only the development server. Verify deep links/base paths, caching, compressed content types, cross-origin assets, service worker if present, and a fresh browser load. Re-run the complete route on the deployment URL and compare the build identifier with the accepted local artefact.
+
+## Defect and acceptance language
+
+Write defects as observable mismatches:
+
+> At [route/state/view], after [action], [observable result] occurs; expected [contract]. Reproduced [rate] on [build/device]. Evidence: [capture/trace].
+
+Use severity based on player impact:
+
+- **Blocker:** cannot load, control, progress, recover, or maintain the renderer contract.
+- **High:** core mechanic, collision, encounter, audiovisual causality, or target-frame contract fails.
+- **Medium:** visible quality/readability/lifecycle defect with a reliable route.
+- **Low:** contained polish issue without route or state risk.
+
+Accept only current passes in `docs/ACCEPTANCE.md`. Mark untested claims `not-run`, uncertain results `blocked`, and known failures `fail`. Never convert missing evidence into a pass.

@@ -1,0 +1,64 @@
+# Primary-source discovery ledger
+
+This ledger is a discovery map, not a version lock. At the start of every new project or major rebuild, resolve the latest stable releases from official release pages, inspect the matching tagged source and migration guidance, and record the exact selected versions in that project's lockfile, asset manifest, and acceptance evidence. Never copy a release number from this reusable skill into a new build.
+
+Links to moving branches or current documentation are entry points. After resolving a stable release, switch source links to that release's tag before relying on an implementation detail. Re-check primary sources whenever the project upgrades.
+
+## Latest stable Three.js, native WebGPU, and TSL
+
+- **Release and migration authority:** [official releases](https://github.com/mrdoob/three.js/releases), [migration guide](https://github.com/mrdoob/three.js/wiki/Migration-Guide). Resolve latest stable here, then pin it in the project rather than this skill.
+- **WebGPU renderer and active backend:** [official guide](https://threejs.org/manual/en/webgpurenderer), [current source path](https://github.com/mrdoob/three.js/blob/master/src/renderers/webgpu/WebGPURenderer.js). Verify the resolved stable release's backend-selection and introspection behaviour after asynchronous initialisation; strict projects reject every non-WebGPU backend.
+- **Renderer lifecycle, loop, compute, information, and disposal:** [current Renderer source path](https://github.com/mrdoob/three.js/blob/master/src/renderers/common/Renderer.js), [Info source path](https://github.com/mrdoob/three.js/blob/master/src/renderers/common/Info.js), [WebGPU timestamp source path](https://github.com/mrdoob/three.js/blob/master/src/renderers/webgpu/utils/WebGPUTimestampQueryPool.js), [WebGPU specification](https://gpuweb.github.io/gpuweb/#timestamp-query). Basis for one animation-loop owner and separate workload, CPU, and optional GPU-timing evidence.
+- **TSL and node-material extension points:** [TSL reference](https://threejs.org/docs/TSL.html), [NodeMaterial source path](https://github.com/mrdoob/three.js/blob/master/src/materials/nodes/NodeMaterial.js), [MeshStandardNodeMaterial source path](https://github.com/mrdoob/three.js/blob/master/src/materials/nodes/MeshStandardNodeMaterial.js). Supports PBR slot composition; confirm names and semantics against the resolved release.
+- **RenderPipeline and colour transform:** [RenderPipeline documentation](https://threejs.org/docs/pages/RenderPipeline.html), [current source path](https://github.com/mrdoob/three.js/blob/master/src/renderers/common/RenderPipeline.js), [post-processing guide](https://threejs.org/manual/en/webgpu-postprocessing.html). Basis for one output graph, semantic MRT, and explicit final colour ownership.
+- **Compute rain:** [current official example source path](https://github.com/mrdoob/three.js/blob/master/examples/webgpu_compute_particles_rain.html). Demonstrates storage-buffer precipitation but is a capability proof, not a production deterministic weather simulation.
+- **Selective emissive bloom:** [current official example source path](https://github.com/mrdoob/three.js/blob/master/examples/webgpu_postprocessing_bloom_emissive.html), [BloomNode source path](https://github.com/mrdoob/three.js/blob/master/examples/jsm/tsl/display/BloomNode.js). Supports semantic bloom while requiring current pass/target budgeting.
+- **GTAO, depth of field, cascaded shadows, and warm-up:** [GTAONode](https://github.com/mrdoob/three.js/blob/master/examples/jsm/tsl/display/GTAONode.js), [DepthOfFieldNode](https://github.com/mrdoob/three.js/blob/master/examples/jsm/tsl/display/DepthOfFieldNode.js), [CSMShadowNode](https://github.com/mrdoob/three.js/blob/master/examples/jsm/csm/CSMShadowNode.js), [compile example](https://github.com/mrdoob/three.js/blob/master/examples/webgpu_compile_async.html). Treat each as a current API reference whose quality, cost, and lifecycle must be proven on the actual route.
+
+## Blender authoring and glTF export
+
+Blender operation in Replit requires a configured, working Blender MCP connection. These sources describe Blender capabilities; they do not provide Replit Agent with a local executable or desktop access. Use only operations exposed by the actual connection. Supplied GLBs can be processed without Blender.
+
+- **Latest stable Blender:** [official downloads](https://www.blender.org/download/). Compare the connected server's reported version with latest stable when selecting a new Blender production lane; record the resolved project version without silently installing or upgrading the server.
+- **Blender Python API:** [current official API](https://docs.blender.org/api/current/). When the configured MCP supports Python execution in Blender, use checked-in `bpy` automation for repeatable asset generation, validation, baking, and export; confirm API calls against the connected runtime.
+- **Blender glTF exporter:** [current exporter manual](https://docs.blender.org/manual/en/latest/addons/scene_gltf2.html), [current export operator API](https://docs.blender.org/api/current/bpy.ops.export_scene.html#bpy.ops.export_scene.gltf), [official exporter repository](https://github.com/KhronosGroup/glTF-Blender-IO). Establishes metal/rough PBR mapping, extras/custom properties, animations, skins, morphs, instances, and optional cameras/lights/extensions. Export settings remain a versioned project recipe and require a Three.js round trip.
+- **Runtime-format guidance:** [Three.js model-loading guide](https://threejs.org/manual/en/loading-3d-models.html), [GLTFLoader documentation](https://threejs.org/docs/pages/GLTFLoader.html), [Khronos glTF resources](https://www.khronos.org/gltf/). glTF is designed for runtime delivery and is the preferred interchange for DCC-authored assets, but that does not make every export performant; validate, optimise, measure, and compare it with a native asset lane.
+
+## Capability references, not production contracts
+
+- **Threejs-Punk:** [repository](https://github.com/ektogamat/threejs-conference). Re-check its current licence before any reuse. Treat it as evidence for camera-local fields and layered wetness, not as architecture or art direction; reject frame-dependent weather, unrelated timed splashes, permissive renderer fallback, and FPS-only adaptation.
+- **Needle Mesh Baker:** [product documentation](https://engine.needle.tools/docs/products/needle-mesh-baker.html). Optional offline baking for suitable static assets, never a reason to flatten an interactive world or discard gameplay metadata.
+- **Needle progressive glTF:** [repository](https://github.com/needle-tools/gltf-progressive). Re-check its latest stable status and prove native current Three.js WebGPU, worker, teardown, cache, poor-network, and memory behaviour before adoption.
+
+## Gameplay, physics, animation, audio, and state
+
+- **Official Three.js FPS example:** [current source path](https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html). Gameplay-pattern reference only; never adopt its renderer path when it conflicts with this skill's strict native WebGPU contract.
+- **Pointer-lock lifecycle:** [current PointerLockControls source path](https://github.com/mrdoob/three.js/blob/master/examples/jsm/controls/PointerLockControls.js). Confirm current connect/disconnect/disposal semantics; the application still owns semantic input and focus recovery.
+- **Three static collision primitives:** [Octree source path](https://github.com/mrdoob/three.js/blob/master/examples/jsm/math/Octree.js), [Capsule source path](https://github.com/mrdoob/three.js/blob/master/examples/jsm/math/Capsule.js). Lightweight static-world option, not dynamic rigid-body physics.
+- **three-mesh-bvh:** [repository and current API](https://github.com/gkjohnson/three-mesh-bvh). Supports accelerated static collision, raycast, and spatial queries with explicit local-space and rebuild/refit constraints.
+- **Rapier:** [official JavaScript guide](https://rapier.rs/docs/user_guides/javascript/getting_started_js), [repository](https://github.com/dimforge/rapier). Supports dynamic bodies/platforms and character controllers; resolve latest stable, record WASM ownership, and run route-specific edge-case tests.
+- **AnimationMixer lifecycle:** [AnimationMixer documentation](https://threejs.org/docs/pages/AnimationMixer.html), [AnimationAction documentation](https://threejs.org/docs/pages/AnimationAction.html). Supplies blending and cache mechanics; gameplay still owns the state graph and event authority.
+- **Three audio:** [Audio documentation](https://threejs.org/docs/pages/Audio.html), [PositionalAudio documentation](https://threejs.org/docs/pages/PositionalAudio.html). Application owns unlock, buses, pooling, concurrency, and teardown.
+- **Yuka AI:** [repository](https://github.com/Mugen87/yuka). Optional source for state/goal, steering, navigation, perception, and memory patterns.
+- **Recast Navigation JS:** [repository](https://github.com/isaac-mason/recast-navigation-js). Supports navmeshes, workers, crowds, and obstacles; navigation does not replace collision or authored traversal states.
+- **bitECS:** [repository](https://github.com/NateTheGreatt/bitECS). Resolve its latest stable API before adoption; an ECS and multithreading remain project decisions.
+- **Colyseus:** [official documentation](https://docs.colyseus.io/), [repository](https://github.com/colyseus/colyseus). Rooms and server state do not supply prediction, reconciliation, lag compensation, or interest management automatically.
+- **Versioned persistence pattern:** [current Zustand persist source path](https://github.com/pmndrs/zustand/blob/main/src/middleware/persist.ts). Implementation reference for schema versioning, migration, partial durable state, controlled hydration, and clear—not a required dependency.
+
+## glTF, compression, world partition, and delivery
+
+- **Current Three.js loaders:** [GLTFLoader documentation](https://threejs.org/docs/pages/GLTFLoader.html), [KTX2Loader documentation](https://threejs.org/docs/pages/KTX2Loader.html). Confirm decoder/extension registration, renderer support detection, worker ownership, and disposal against the resolved stable release.
+- **Khronos texture and geometry extensions:** [KHR_texture_basisu](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_texture_basisu), [KHR_draco_mesh_compression](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_draco_mesh_compression), [KHR_meshopt_compression](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression). Re-check current specification and ecosystem status before choosing a delivery lane.
+- **meshoptimizer and gltfpack:** [repository](https://github.com/zeux/meshoptimizer), [current gltfpack guide](https://github.com/zeux/meshoptimizer/tree/master/gltf). Supports error-aware simplification, ordering, compression, and preservation flags; default transforms can still be destructive.
+- **glTF Transform:** [official documentation](https://gltf-transform.dev/), [repository](https://github.com/donmccurdy/glTF-Transform). Supports explicit transform graphs; resolve latest stable and do not assume a general optimiser fits every asset class.
+- **Hierarchical streaming concepts:** [3DTilesRendererJS repository](https://github.com/NASA-AMMOS/3DTilesRendererJS). Source for screen-space-error traversal, bounded queues/caches, disposal, and backpressure concepts; not a default dependency for compact authored levels.
+- **glTF validation:** [Khronos glTF Validator](https://github.com/KhronosGroup/glTF-Validator). Structural and extension checks complement, but never replace, appearance, animation, metadata, collision, and route QA.
+- **Reproducible JavaScript installation:** [npm ci documentation](https://docs.npmjs.com/cli/commands/npm-ci/). A frozen project install does not pin Blender or other native tools; record those separately.
+- **Hashed production assets:** [Vite static asset handling](https://vite.dev/guide/assets.html). Supports content-hashed imports and explicit cache/version policy for public or dynamic assets.
+
+## Provenance exclusions
+
+- Capability references do not define this skill's required art direction, genre, game design, source code, or dependency set.
+- Unlicensed repositories, proprietary/ripped content, copied mirrors, generated bundles, and recognisable protected expression remain excluded.
+- Archived or WebGL-only implementations may be studied only for renderer-independent concepts and must never introduce an old rendering path into the product.
+- Counts, screenshots, examples, and repository claims are not measured target-hardware performance or live-game acceptance evidence.
