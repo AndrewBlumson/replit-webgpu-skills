@@ -11,11 +11,14 @@ Inspect what the application actually renders. Produce fresh screenshots of
 the intended scene, examine them, and use that evidence to guide changes.
 
 This skill includes a workaround first verified in a Three.js 0.184.0
-application and since checked in 0.184.0 and 0.186.1 test scenes: route the
-application's real final frame into a readable render target, read its
-pixels, temporarily display them through Canvas2D, allow browser presentation
-to settle, and capture that surface. Canvas2D presents the finished GPU image;
-it does not render a replacement scene.
+application and since checked in 0.186.1 (the latest release when written) and
+0.184.0 test scenes: pause the application's render loop, route its real final
+frame into a readable render target in a fresh animation frame, read its
+pixels, temporarily show them through Canvas2D in the WebGPU canvas's place,
+allow browser presentation to settle, and capture that surface. Canvas2D
+presents the finished GPU image; it does not render a replacement scene. After
+a Three.js upgrade, re-check the version-specific points listed in the
+reference.
 
 ## Read the relevant reference
 
@@ -71,17 +74,24 @@ fix broken shaders or bypass browser security and cross-origin restrictions.
 
 - Freeze application-source edits during each browser capture run. Live module
   reloads can destroy evaluations and invalidate frame evidence.
-- Use one simulation and render authority. If staging a scene requires pausing
-  the normal loop, do so through the existing development harness. Never start
-  a competing loop or leave the application paused unintentionally.
+- Use one simulation and render authority. The readback helper pauses the
+  renderer's own animation loop until its `cleanup()`, which runs after the
+  screenshot; pause any other loop through the existing development harness.
+  Never start a competing loop or leave the application paused unintentionally.
 - Set the intended scene or waypoint explicitly, including when the first
   requested waypoint is not the starting location.
 - Synchronise render models, interpolation state, animated world objects,
   effects, camera and world matrices using the application's real update path.
 - Allow asynchronous assets and pipeline initialisation to finish.
-- Before the first saved cold-readback image, submit and discard a synchronised
-  native frame at the intended pose. Then render and read the saved frame.
-  Warm-up is a mitigation, not proof of freshness.
+- Render the saved frame in a fresh animation frame while the application
+  loop is paused: Three.js updates pipeline passes, most effects, shadow maps
+  and skinned-mesh bones at most once per animation frame, so a frame
+  rendered alongside the loop's own shows the loop's pose, even without
+  post-processing. Use settle frames for temporal effects. A hidden or
+  throttled page gets no animation frames; bring it to the foreground rather
+  than accepting a possibly stale image.
+- Set DOM overlay values, such as the HUD, for the staged state too, and keep
+  the application paused until the screenshot is saved.
 
 ## 4. Capture the real final output
 
@@ -93,7 +103,12 @@ fix broken shaders or bypass browser security and cross-origin restrictions.
   so tone mapping and output colour space are applied.
 - Await the readback operation. Respect byte offsets, row padding, orientation,
   channel order and colour conversion. Do not assume a WebGL-style vertical flip.
-- Present only those GPU pixels in a temporary Canvas2D surface.
+- Present only those GPU pixels in a temporary Canvas2D surface that takes the
+  WebGPU canvas's place on the page, so its CSS and the DOM overlays such as
+  the HUD above it stay as in the game. For a scene-only image, hide the other
+  page elements while the surface is shown (the template's
+  `includeOverlays: false`) and label the image accordingly. Convert
+  premultiplied canvas alpha to the straight alpha Canvas2D expects.
 - Keep its size and aspect ratio consistent with the source. Distinguish
   device-pixel dimensions from CSS screenshot dimensions.
 - Allow at least two animation-frame callbacks after presentation before
@@ -159,8 +174,9 @@ Label each image as either:
 - Direct desktop/browser capture.
 - Staged native WebGPU final-pipeline readback.
 
-State whether HTML interface overlays are included. A full-screen readback
-surface normally excludes the HUD, menus and other DOM layers.
+State whether HTML interface overlays are included. An in-place readback
+includes the HUD, menus and other DOM layers; a scene-only capture, or a
+full-viewport fallback when the canvas is not on the page, excludes them.
 
 Present the inspected images. Report what improved, what failed, what was not
 checked and what remains below the requested quality. A still frame does not

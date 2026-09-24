@@ -6,8 +6,14 @@
 | --- | --- |
 | Direct screenshot is blank, but a known-colour native readback is correct | Likely capture/compositor fault. Use native readback presentation and label it. |
 | Both normal output and readback are blank | Investigate application initialisation, camera, render submission, resources and validation errors. Do not assume an iframe-only problem. |
-| Image is nonblank but shows the starting location instead of the requested waypoint | Reject it. Check state advancement, interpolation, rendered transforms, camera, cold-frame warm-up and presentation freshness. |
-| CPU state and transforms are correct but pixels show an older scene | Metadata cannot prove GPU freshness. Inspect the final pipeline submission and saved pixels. |
+| Image is nonblank but shows the starting location instead of the requested waypoint | Reject it. Check state advancement, interpolation, rendered transforms, camera, whether every render loop was paused, and presentation freshness. |
+| CPU state and transforms are correct but pixels show an older scene | Metadata cannot prove GPU freshness. Three.js updates pipeline passes, most effects, shadow maps and skinned-mesh bones at most once per animation frame, so a capture rendered in the same frame as the application's loop shows the loop's pose, even without post-processing. Pause the loop and render in a fresh animation frame, as the template does. |
+| The helper reports that `renderer.render()` was called outside `renderFinalFrame()` | A render loop outside `renderer.setAnimationLoop()` is still running, such as the application's own `requestAnimationFrame()` loop, or `synchroniseFrame()` or `checkPose()` renders. Pause the loop through the harness, move the rendering out of those functions and retry. |
+| No animation frame arrives within the timeout | If the page is hidden or in a background tab, pipeline passes cannot refresh: bring it to the foreground. If it is visible, frames are slower than the timeout, as on a software adapter: raise `frameTimeoutMs`. Do not accept an image rendered without fresh frames. |
+| The helper reports that a capture is already running or on screen | A previous capture was not cleaned up, or two captures overlapped. Call the earlier capture's `cleanup()` and capture again one at a time. |
+| The HUD in an in-place readback shows values from a different moment than the scene | Set overlay values for the staged state in `synchroniseFrame()` and take the screenshot before `cleanup()` resumes the application. |
+| The HUD is missing from a readback | Check `includesDOMOverlays`: scene-only captures and the full-viewport fallback exclude overlays by design. |
+| Edges over a transparent background differ from the application, or `inexactAlphaPixels` is not zero | Those pixels add light over the page, which Canvas2D cannot reproduce exactly. Use an opaque scene background for the verification capture or compare with a direct capture. |
 | Browser evaluation is destroyed during a source update | Inconclusive capture, not a proven GPU crash. Freeze edits and retry the affected view. |
 | Application works at its direct URL but not embedded | Investigate embedding separately. Do not claim the preview iframe is fixed. |
 | No usable WebGPU adapter/device can be obtained | Report the actual capability failure. Pixel readback cannot supply a missing renderer. |
@@ -72,8 +78,10 @@ Actual camera position and viewing direction:
 Pose checks and tolerances:
 WebGPU backend confirmed:
 Adapter classification, if available:
-Pipeline warm-up performed:
+Loops paused, and settle frames rendered:
+Presentation (metadata.presentation: in-place / full-viewport; an in-place capture with includesDOMOverlays false is scene-only):
 DOM overlays included:
+Transparent pixels (non-opaque / inexact):
 Relevant page/console/navigation diagnostics:
 GPU validation: passed / failed / unavailable / not run
 Pixel sanity checks:
@@ -96,7 +104,8 @@ storing secrets, session tokens, cookies or credential-bearing URLs.
 The requested coastal bend is visible, including the pavilion on the expected
 side. Rendered player and camera poses agree with the requested route state.
 The image came from the final native pipeline and was personally inspected.
-The report labels it as staged readback and excludes performance and HUD claims.
+The report labels it as staged readback, states whether the HUD is included,
+and makes no performance claims.
 
 ### Rejected evidence
 
@@ -117,6 +126,9 @@ support, collision safety, target-hardware frame rate or reference-quality art.
 - Staged fixed-step advancement is not a continuous gameplay test.
 - Software-adapter output is not a target-hardware benchmark.
 - A scene-only readback is not proof that the HUD or menus are correct.
+- An in-place readback shows the HUD as the page shows it while the capture is
+  on screen, with the application paused. It does not prove that the HUD
+  updates correctly during play.
 - A successful direct page is not proof that the iframe works.
 - Passing tests and GPU checks is not proof of visual quality.
 - A skill documents a workflow. It cannot guarantee that every browser,
