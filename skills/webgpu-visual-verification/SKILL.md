@@ -10,8 +10,9 @@ description: Capture and visually verify WebGPU applications using the available
 Inspect what the application actually renders. Produce fresh screenshots of
 the intended scene, examine them, and use that evidence to guide changes.
 
-This skill includes the workaround verified in a Three.js 0.184.0 application:
-render the real final WebGPU pipeline into a readable render target, read its
+This skill includes a workaround first verified in a Three.js 0.184.0
+application and since checked in 0.184.0 and 0.186.1 test scenes: route the
+application's real final frame into a readable render target, read its
 pixels, temporarily display them through Canvas2D, allow browser presentation
 to settle, and capture that surface. Canvas2D presents the finished GPU image;
 it does not render a replacement scene.
@@ -85,8 +86,11 @@ fix broken shaders or bypass browser security and cross-origin restrictions.
 ## 4. Capture the real final output
 
 - Preserve the application's materials, camera, lighting, tone mapping and
-  post-processing. Capture the final pipeline, not a diagnostic raw scene pass.
-- Use a readable target appropriate to the renderer and output format.
+  post-processing. Capture the application's final render, including its
+  post-processing pipeline when it has one, not a diagnostic raw scene pass.
+- Use a readable target appropriate to the renderer and output format. Route
+  the final frame to it as screen output (Three.js: `setOutputRenderTarget()`),
+  so tone mapping and output colour space are applied.
 - Await the readback operation. Respect byte offsets, row padding, orientation,
   channel order and colour conversion. Do not assume a WebGL-style vertical flip.
 - Present only those GPU pixels in a temporary Canvas2D surface.
@@ -94,7 +98,8 @@ fix broken shaders or bypass browser security and cross-origin restrictions.
   device-pixel dimensions from CSS screenshot dimensions.
 - Allow at least two animation-frame callbacks after presentation before
   requesting the screenshot. These callbacks do not replace GPU completion.
-- Restore the previous render target, remove temporary surfaces and hooks,
+- Restore the previous render target and output render target, remove
+  temporary surfaces and hooks,
   release capture-only resources, and restore any paused application state when
   the previous render path is usable. In an offscreen-only diagnostic session,
   keep its output target active until the loop is stopped; do not resume the

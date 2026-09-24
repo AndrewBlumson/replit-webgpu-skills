@@ -14,7 +14,8 @@
 | Device loss follows rendering to the canvas | Record the loss and render sequence. Retry in a fresh renderer/device with readable final output configured before the first render; keep startup, warm-up and cleanup offscreen. Follow the [offscreen startup procedure](native-webgpu-readback.md#offscreen-startup-after-canvas-triggered-device-loss). |
 | A fresh offscreen startup also loses its device | Retain diagnostics and report the observed failure. Stop repeating the same attempt; do not infer that switching targets revives a lost device. |
 | Canvas belongs to a cross-origin frame | Use authorised browser frame access or the application's permitted direct URL. Do not bypass the same-origin policy. |
-| Colours are washed out, channels swapped or rows corrupted | Check final-output selection, colour space, channel order, byte format and actual row stride. |
+| Readback is much darker or more saturated than the application | Tone mapping and output colour space were skipped. Route the final frame with `setOutputRenderTarget()`, not `setRenderTarget()`, and render it with the application's real final render function. |
+| Colours are washed out, channels swapped or rows corrupted | Check final-output selection, colour space, channel order, byte format and actual row stride. Three.js 0.184 to 0.186 readback pads each row to a multiple of 256 bytes when the drawing-buffer width is not a multiple of 64 pixels; remove the padding once, as the template does. |
 | The subject is hidden behind foreground geometry | Select a clearer inspection camera. Do not treat an occluded image as visual proof. |
 | No GPU validation facility is available | Report validation as unavailable, not passed. |
 
