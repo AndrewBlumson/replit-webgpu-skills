@@ -28,7 +28,8 @@ let accumulator = 0;
 
 renderer.setAnimationLoop(() => {
   timer.update();
-  accumulator += Math.min(timer.getDelta(), 0.25);   // clamp long gaps
+  const frameDelta = Math.min(timer.getDelta(), 0.25);   // clamp long gaps
+  accumulator += frameDelta;
   if (accumulator >= FIXED_STEP) {
     const input = inputController.sample();          // semantic actions; presses wait for a tick
     while (accumulator >= FIXED_STEP) {
@@ -37,6 +38,7 @@ renderer.setAnimationLoop(() => {
     }
   }
   present(accumulator / FIXED_STEP);                 // interpolation factor
+  updateEffects(frameDelta);                         // visual-only GPU effects, such as particles
   draw();
 });
 

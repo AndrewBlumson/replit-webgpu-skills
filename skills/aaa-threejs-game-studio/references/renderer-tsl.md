@@ -1,38 +1,14 @@
 # Latest stable Three.js WebGPU and TSL production contract
 
-Resolve the latest stable Three.js release from official sources when a new project or major rebuild begins, then pin the exact resolved release in that project's lockfile and evidence. Never preserve a release number in this reusable skill. TSL, node materials, compute, post-processing, and WebGPU internals change between releases; inspect the matching source and migration guidance before implementation or upgrade.
+Resolve the latest stable Three.js release from official sources when a new project or major rebuild begins, then pin the exact resolved release in that project's lockfile and evidence. A release number in this skill records what its examples were tested with, not the version to install. TSL, node materials, compute, post-processing, and WebGPU internals change between releases; inspect the matching source and migration guidance before implementation or upgrade.
+
+This file sets the rules. `webgpu-cookbook.md` has tested code for them (renderer, environment, shadows, TSL, bloom, particles, instancing, warm-up, loaders), `failure-modes.md` maps symptoms to causes, and `scripts/check-three-api.mjs` lists where the project uses names the installed release has deprecated or no longer exports (changed arguments and options are invisible to it; see the cookbook's renamed-and-removed tables).
 
 ## Strict WebGPU bootstrap
 
-`WebGPURenderer` may support a non-WebGPU backend depending on the current release. A renderer class or wrapper flag does not prove the active backend. A strict high-end game must check the actual backend after asynchronous initialisation and fail closed when it is not WebGPU. Re-check the exact introspection API against the resolved stable release; the following is a pattern, not an evergreen copy-paste guarantee.
+`WebGPURenderer` falls back to WebGL2 when WebGPU is unavailable, with only a console warning. A renderer class or wrapper flag does not prove the active backend. A strict high-end game must check the actual backend after asynchronous initialisation and fail closed when it is not WebGPU. Use the cookbook's tested `createRenderer()`: it checks for an adapter, awaits `renderer.init()`, and disposes the renderer and throws when `renderer.backend.isWebGPUBackend` is not `true`. After copying it, run `scripts/check-three-api.mjs` on the project; when the installed release is newer than the cookbook's, read `Renderer.init()` and `WebGPUBackend.init()` in the installed source.
 
-```js
-import * as THREE from 'three/webgpu';
-
-export async function createStrictRenderer(canvas) {
-  if (!navigator.gpu) throw new Error('This experience requires WebGPU.');
-
-  const renderer = new THREE.WebGPURenderer({
-    canvas,
-    antialias: false,
-    alpha: false,
-    powerPreference: 'high-performance',
-  });
-
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.AgXToneMapping;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-  renderer.setSize(innerWidth, innerHeight, false);
-
-  await renderer.init();
-  if (renderer.backend?.isWebGPUBackend !== true) {
-    renderer.dispose();
-    throw new Error('WebGPU initialisation failed; WebGL fallback is disabled.');
-  }
-
-  return renderer;
-}
-```
+`createRenderer()` asks for a full (core) WebGPU adapter first, so a device that offers only compatibility-mode WebGPU is refused before `init()`. If that check is changed, read `renderer.backend.compatibilityMode` after `init()`: when it is `true`, Three.js disables MSAA and per-channel MRT blending, so treat the device as below the strict target, record the adapter, and keep that route unaccepted rather than adding a lower tier.
 
 Show capability/init failure as a designed UI state with requirements and recovery advice. Do not leave a blank canvas or quietly lower the renderer contract. Keep the pixel-ratio cap and antialiasing choice in a quality profile; measure them on the target device.
 
@@ -150,7 +126,15 @@ For a camera-local height/depth field, restore renderer state with `try/finally`
 
 ## Pipeline warm-up
 
-Call `await renderer.compileAsync(scene, camera)` only after representative lights, environment, material features, and target scene context are configured. It reduces first-use shader/pipeline stutter but does not prove every hidden/dynamic material, compute dispatch, layer camera, render target, or post node has compiled.
+`renderer.compileAsync(scene, camera)` compiles only for the current render target, skips objects the camera cannot see, and never builds shadow-map or post-processing pipelines. A pass's `compileAsync(renderer)` sets that pass's target and MRT channels but not its `contextNode` (ambient occlusion), `overrideMaterial` or layers. With a `RenderPipeline`, warm up behind the loading screen, after lights, environment and every material are in place:
+
+1. create every pass with `pass(scene, camera, { samples: renderer.samples })`, so the warm-up compiles for the target the game really draws to;
+2. move the camera to a view that sees the whole level, with a `far` that reaches all of it, and `await compileAsync(renderer)` on every pass, after every `setMRT()` and `getTextureNode()` call;
+3. `await renderer.compileComputeAsync([...])` for compute kernels;
+4. render one or two real frames with `pipeline.render()`, which builds the real pass variants, shadows and post-processing, then restore the camera;
+5. `await renderer.backend.device.queue.onSubmittedWorkDone()`. `render()` returns before the GPU has built the pipelines those frames created; without this wait, play froze for 0.3 to 1 second after the loading screen on a machine that had not compiled the shaders before. Do not use `renderer.waitForGPU()`: it was removed and now only logs an error.
+
+`webgpu-cookbook.md` has the tested `warmUp()`. Without a `RenderPipeline`, move the camera the same way, `await renderer.compileAsync(scene, camera)`, render one real frame, then wait the same way. Neither proves that hidden, dynamic or later-spawned materials, layer cameras, render targets or auxiliary passes are warm; the manifest below covers them.
 
 Maintain a warm-up manifest containing:
 
@@ -161,7 +145,7 @@ Maintain a warm-up manifest containing:
 - reflection/probe/auxiliary cameras;
 - the final post graph and quality tier.
 
-Block control on genuinely critical compilation and preload. Defer noncritical variants in small idle slices. Keep progress UI honest about asset decode/upload and compilation. Validate the first real encounter for hitches; a resolved compile promise alone is not the gate.
+Block control on genuinely critical compilation and preload. Defer noncritical variants in small idle slices. Keep progress UI honest about asset decode/upload and compilation. Validate the first real encounter for hitches; a resolved compile promise alone is not the gate. Log `renderer.info.memory.programs` when the loading screen closes and again after the first encounter: if it rose, shaders compiled during play. It counts shaders, not pipelines, so a flat count does not rule out new pipeline variants; also check the encounter's first frame times.
 
 ## Measurement and adaptive quality
 

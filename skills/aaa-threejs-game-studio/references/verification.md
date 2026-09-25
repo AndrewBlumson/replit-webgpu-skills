@@ -113,7 +113,7 @@ Record the change, quality cost, and before/after route measurement.
 
 ## Gate 6 — warm-up and lifecycle
 
-Exercise every representative material, light/shadow variant, skinned/morphed character, particle/compute pipeline, and post path before the first latency-sensitive use. `compileAsync()` is necessary for scene materials but may not cover every dynamically constructed or post-processing path; prove the actual encounter is hitch-free.
+Exercise every representative material, light/shadow variant, skinned/morphed character, particle/compute pipeline, and post path before the first latency-sensitive use. `compileAsync()` skips objects outside the camera view, shadow maps and post-processing, so warm up as `webgpu-cookbook.md` shows: from a view that sees the whole level, `compileAsync()` on every pass and `compileComputeAsync()` on compute kernels, real frames, then `await renderer.backend.device.queue.onSubmittedWorkDone()`. Prove the actual encounter is hitch-free: `renderer.info.memory.programs` must not rise during it (a flat count does not rule out new pipeline variants), and its first frames must not spike.
 
 Then run at least two cycles of:
 

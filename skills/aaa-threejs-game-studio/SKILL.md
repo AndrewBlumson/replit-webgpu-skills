@@ -13,6 +13,8 @@ Read only the references needed for the task:
 
 - For any new game or major rebuild, read `references/studio-workflow.md` and `references/verification.md`.
 - For WebGPU, TSL, compute, materials, lighting, weather, post, warm-up, profiling, resize, or disposal, read `references/renderer-tsl.md`.
+- Before writing or upgrading Three.js code, read `references/webgpu-cookbook.md` and, once dependencies are installed, run `node /absolute/path/to/aaa-threejs-game-studio/scripts/check-three-api.mjs /absolute/path/to/project` (for a project that loads Three.js from a CDN, add `--three` with an unpacked copy of the same release). Take the API from the installed release and the cookbook's tested patterns, not from memory.
+- When the game renders wrongly, hitches, or breaks after an upgrade, check `references/failure-modes.md` before debugging from scratch.
 - For input, movement, collision/physics, combat, AI, animation, objectives, save, audio, ECS, or multiplayer, read `references/gameplay-systems.md`.
 - Only when a Blender MCP connection has been configured, read `references/blender-production.md` to verify its capabilities before choosing Blender authoring, baking, or export. Also read `references/world-asset-pipeline.md`.
 - For another DCC, glTF, compression, LOD, instancing, streaming, collision proxies, asset licences, or deployment assets, read `references/world-asset-pipeline.md`.
@@ -54,7 +56,7 @@ Use this product contract. Explicit project requirements may change genre or oth
 - a minimum options baseline appropriate to the genre: remapping or clearly documented bindings, sensitivity/dead-zone/invert controls, FOV/camera options where applicable, subtitles for critical speech, separate volume controls, and reduced shake/flash or motion settings;
 - deterministic QA seeds/scenarios behind development-only boundaries.
 
-At the start of each new project or major rebuild, verify the latest stable Three.js release and current migration guidance from official sources. Do not copy a fixed Three.js or Blender release number into this reusable skill. Record the exact resolved versions only in the project lockfile, asset manifest, build evidence, and acceptance ledger so that the project remains reproducible.
+At the start of each new project or major rebuild, verify the latest stable Three.js release and current migration guidance from official sources. Release numbers inside this skill, such as the cookbook's version note, record what was tested; never treat them as the version to install. Record the exact resolved versions only in the project lockfile, asset manifest, build evidence, and acceptance ledger so that the project remains reproducible.
 
 In Replit, treat Blender authoring as unavailable unless someone has configured a working Blender MCP connection and its tools support the required operation. A local Blender installation on the user's computer does not give Replit Agent access. Do not install or launch Blender in the Replit shell, use desktop-computer control as a substitute, or require MCP setup for an otherwise achievable game.
 
@@ -191,7 +193,7 @@ Cost every attachment, pass, shadow, reflection, transparent layer, and readback
 
 Make weather/effects causal and spatial. For rain, coordinate far/near coverage, wind, bounded time, shelter/exposure, actual impact-driven splashes/ripples, wet-surface state, runoff/object interaction, and audio. Random splashes, low roughness, or fullscreen droplets do not prove world rain.
 
-Warm representative scene, material, shadow, compute, auxiliary-camera, post, enemy, weapon, and effect variants. `compileAsync()` is useful but does not prove every runtime pipeline is warm; play the first real encounter.
+Warm representative scene, material, shadow, compute, auxiliary-camera, post, enemy, weapon, and effect variants behind the loading screen: from a camera view that sees the whole level, call `compileAsync()` on every pass and `compileComputeAsync()` on compute kernels, render real frames, then `await renderer.backend.device.queue.onSubmittedWorkDone()` (`references/webgpu-cookbook.md`). `compileAsync()` alone skips off-screen objects, shadow maps, and post. Then play the first real encounter: `renderer.info.memory.programs` must not rise and its first frames must not spike.
 
 ## Verify the rendered product
 
