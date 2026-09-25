@@ -15,7 +15,7 @@ Before testing, record:
 - whether the run is cold, warm-cache, development, or production;
 - the acceptance requirement each capture or metric proves.
 
-Keep deterministic QA controls behind an explicit development boundary. They may select a seed, scenario, checkpoint, enemy state, weather intensity, or overlay, but must not alter production behaviour in an accepted build.
+Keep deterministic QA controls behind an explicit development boundary. They may select a seed, scenario, checkpoint, enemy state, weather intensity, or overlay, but must not alter production behaviour in an accepted build. The `__qa` hook itself must be absent from the production bundle (Gate 1); a query flag may choose its scenario only in a development or QA build.
 
 ## Gate 1 — static and build integrity
 
@@ -27,7 +27,8 @@ Run the repository’s existing formatter, typecheck, unit/system tests, and pro
 - no `WebGLRenderer`, legacy `EffectComposer`, `ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile`, or other old rendering path in the product; migrate or remove one found in existing work rather than preserving it as a compatibility branch;
 - asset URLs and case sensitivity;
 - licences/provenance for every shipped third-party asset, font, library, and sound;
-- production bundle does not expose debug cheats, source-only credentials, or intrusive telemetry.
+- production bundle does not expose debug cheats, source-only credentials, or intrusive telemetry;
+- production bundle contains none of the `__qa` hook's files: `grep -rlE 'QA harness|staged-native-webgpu-final-pipeline-readback|contact-sheet-of-staged-readback-captures' dist` (or whichever folder is deployed) prints nothing (leave `__qa` itself out of the pattern, because game code may check `window.__qa`).
 
 A successful gate allows browser testing; it is not completion.
 
@@ -49,6 +50,8 @@ Capture console evidence and the opening frame after control is genuinely availa
 ## Gate 3 — complete playable route
 
 Follow `docs/QA-ROUTE.md` with player-like input. Do not teleport past untested beats unless a separate deterministic scenario exists for focused repetition.
+
+An agent drives the route through the development-only `window.__qa` hook (see "Give the agent a way to play" in `SKILL.md`), following the `webgpu-visual-verification` skill's `references/scripted-playthrough.md`: reset a named scenario and seed, step the fixed simulation with scripted inputs, give each segment an expectation, capture the key beats onto a contact sheet, run the routes that should fail, and repeat the route to confirm identical states and frame fingerprints. Record the scenario, seed, script, build and each expectation's result in the QA route. Scripted input follows the route like a player but bypasses bindings, the input controller and pointer lock. A scripted pass, headless or not, covers what the simulation does and what the inspected captures show; checks of feel and difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the target device stay `not-run` until a person or the target device checks them.
 
 Verify:
 
@@ -126,6 +129,8 @@ Check that cycles do not duplicate animation loops, DOM/event listeners, physics
 ## Gate 7 — release route
 
 Test the built deployment, not only the development server. Verify deep links/base paths, caching, compressed content types, cross-origin assets, service worker if present, and a fresh browser load. Re-run the complete route on the deployment URL and compare the build identifier with the accepted local artefact.
+
+The production bundle has no `__qa` hook, so play the deployment route by hand. A scripted route on a QA build of the same commit (for example `vite build --mode qa --outDir dist-qa`) supports it and is labelled as a QA build. Record which build each result came from.
 
 ## Defect and acceptance language
 

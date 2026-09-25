@@ -44,6 +44,7 @@ Blender operation in Replit requires a configured, working Blender MCP connectio
 - **bitECS:** [repository](https://github.com/NateTheGreatt/bitECS). Resolve its latest stable API before adoption; an ECS and multithreading remain project decisions.
 - **Colyseus:** [official documentation](https://docs.colyseus.io/), [repository](https://github.com/colyseus/colyseus). Rooms and server state do not supply prediction, reconciliation, lag compensation, or interest management automatically.
 - **Versioned persistence pattern:** [current Zustand persist source path](https://github.com/pmndrs/zustand/blob/main/src/middleware/persist.ts). Implementation reference for schema versioning, migration, partial durable state, controlled hydration, and clear—not a required dependency.
+- **Fixed-step timing:** [Timer documentation](https://threejs.org/docs/pages/Timer.html) and the current [Timer source](https://github.com/mrdoob/three.js/blob/master/src/core/Timer.js). `Clock` is deprecated since r183; confirm in the resolved release.
 
 ## glTF, compression, world partition, and delivery
 
@@ -55,6 +56,7 @@ Blender operation in Replit requires a configured, working Blender MCP connectio
 - **glTF validation:** [Khronos glTF Validator](https://github.com/KhronosGroup/glTF-Validator). Structural and extension checks complement, but never replace, appearance, animation, metadata, collision, and route QA.
 - **Reproducible JavaScript installation:** [npm ci documentation](https://docs.npmjs.com/cli/commands/npm-ci/). A frozen project install does not pin Blender or other native tools; record those separately.
 - **Hashed production assets:** [Vite static asset handling](https://vite.dev/guide/assets.html). Supports content-hashed imports and explicit cache/version policy for public or dynamic assets.
+- **Development-only QA builds:** [Vite env variables and modes](https://vite.dev/guide/env-and-mode.html), [Vite build target](https://vite.dev/config/build-options.html) and [TypeScript allowJs](https://www.typescriptlang.org/tsconfig/allowJs.html). `import.meta.env` values are replaced at build time, so a dynamic import behind them is dropped from the production bundle; confirm with the Gate 1 grep.
 
 ## Provenance exclusions
 

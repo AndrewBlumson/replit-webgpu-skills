@@ -12,7 +12,7 @@ retains an old GPU frame.
 4. Review the name and description and save.
 
 The ZIP contains `SKILL.md` at its root, plus this README and the `references`
-folder. Keep the reference files with the skill.
+and `assets` folders. Keep those files with the skill.
 
 If using project-local skills instead, put these contents inside
 `.agents/skills/webgpu-visual-verification/`.
@@ -27,6 +27,11 @@ https://docs.replit.com/features/agent/agent-customization
   method, a Three.js adaptation template, synchronisation and pixel-layout notes.
 - `references/evidence-and-troubleshooting.md`: failure classification, evidence
   requirements, reporting fields and examples of accepted and rejected captures.
+- `references/scripted-playthrough.md`: driving a game through its
+  development-only `window.__qa` hook, route scripts with expectations, and
+  reporting a run as a labelled contact sheet.
+- `assets/webgpu-readback.js`: the readback template as a ready-to-copy module.
+- `assets/contact-sheet.js`: combines labelled captures into one image.
 
 ## What is covered
 
@@ -35,14 +40,17 @@ method used to get reliable scene images around the observed screenshot problem.
 It includes both stale GPU-frame and stale browser-presentation checks.
 When canvas rendering triggers device loss, it also covers fresh-device startup
 with offscreen output configured before the first render and retained until
-the diagnostic render loop stops.
+the diagnostic render loop stops. With a game's development-only `__qa` hook
+(from the AAA Three.js Game Studio skill), it also covers scripted playthroughs
+reported as a labelled contact sheet.
 
 No: a universal fix for preview iframes, unavailable hardware, broken rendering,
 browser security restrictions, cross-origin access or real-time performance.
 The skill does not switch the application to WebGL or claim that copied pixels
 prove the original embedded preview has been repaired.
 
-The Three.js code is an adaptation reference, not an auto-running plugin.
-An agent must connect it to the actual application's renderer and update logic.
+The Three.js code and the files in `assets` are adaptation references, not an
+auto-running plugin. An agent must connect them to the actual application's
+renderer and update logic, in development-only code.
 This package installs no dependencies and contains no credentials, project URLs,
 runtime hooks or application changes.

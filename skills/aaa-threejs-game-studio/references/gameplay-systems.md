@@ -18,6 +18,40 @@ Run authoritative gameplay at a fixed step, commonly 1/60 s, from an accumulator
 
 Maintain named clocks for simulation, real/UI, animation/presentation, cinematics, and visual effects. Pause and focus-loss policy must stop or continue each clock deliberately.
 
+Keep the live loop thin, so it and the development-only `__qa` hook share the same `simulate`, `present` and `draw` (see "Give the agent a way to play" in `SKILL.md`). `THREE.Clock` is deprecated; use the core `THREE.Timer`. Seed random numbers in game code, not in the QA files, because the simulation needs them in production too:
+
+```js
+const FIXED_STEP = 1 / 60;
+const timer = new THREE.Timer();
+timer.connect(document);          // no delta while the page is hidden
+let accumulator = 0;
+
+renderer.setAnimationLoop(() => {
+  timer.update();
+  accumulator += Math.min(timer.getDelta(), 0.25);   // clamp long gaps
+  if (accumulator >= FIXED_STEP) {
+    const input = inputController.sample();          // semantic actions; presses wait for a tick
+    while (accumulator >= FIXED_STEP) {
+      simulate(FIXED_STEP, input);
+      accumulator -= FIXED_STEP;
+    }
+  }
+  present(accumulator / FIXED_STEP);                 // interpolation factor
+  draw();
+});
+
+// Seeded random numbers (mulberry32); re-seed in every scenario reset.
+function createRng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), a | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+```
+
 ## Input ownership
 
 Create one `InputController` that converts browser/device events into semantic actions. Track:
@@ -31,7 +65,7 @@ Create one `InputController` that converts browser/device events into semantic a
 
 The latest stable Three.js `PointerLockControls` supplies camera rotation, pitch limits, lock/unlock events, and disposal, but it is not a complete input system. Confirm its current API against the resolved project release. Clear held and buffered actions on unlock, blur, hidden document, device disconnect, restart, and state transition. Treat unexpected unlock as pause unless the game contract says otherwise. Request pointer lock and audio unlock from an intentional user gesture.
 
-Input events should never mutate physics or objective state directly. Sample or enqueue commands; consume them in deterministic simulation order.
+Input events should never mutate physics or objective state directly. Sample or enqueue commands; consume them in deterministic simulation order. Pass the sampled commands into the simulation step as one semantic input object, so the development-only `__qa` hook can drive the same step with scripted input (see "Give the agent a way to play" in `SKILL.md`).
 
 ## Player controller and collision choice
 

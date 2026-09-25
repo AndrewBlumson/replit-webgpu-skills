@@ -2,6 +2,8 @@
 
 Status values: `not-run`, `pass`, `fail`, `blocked`, `not-applicable`. Use `not-applicable` only with a recorded reason. A pass needs current evidence from the exact build and route.
 
+A scripted `__qa` route can pass gates about what the simulation does and what its inspected captures show. A gate that also needs a person or the target device (feel and difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the target device) stays `not-run` until that check is done; note the scripted evidence in its Evidence column.
+
 ## Build and runtime contract
 
 | Gate | Status | Evidence | Defect/owner |
@@ -36,7 +38,8 @@ Blender authoring in Replit requires a configured, verified MCP connection. For 
 
 | Gate | Status | Evidence | Defect/owner |
 | --- | --- | --- | --- |
-| Player gains control and input is responsive | not-run |  |  |
+| Player gains control and the scripted `__qa` route reaches the end state | not-run |  |  |
+| Input is responsive on the target input device, played by hand | not-run |  |  |
 | Traversal and collision remain valid across the route | not-run |  |  |
 | Core interaction/combat loop works repeatedly | not-run |  |  |
 | Enemies/hazards perceive, act, react, and resolve | not-run |  |  |

@@ -1,6 +1,6 @@
 ---
 name: webgpu-visual-verification
-description: Capture and visually verify WebGPU applications using the available extended-desktop or browser view, with native final-pipeline GPU readback when preview iframe or headless screenshots are blank, black, white, incomplete or stale, or canvas rendering triggers device loss. Use for Three.js WebGPU and TSL scene inspections, graphical changes, reference comparisons, floating-object checks and incorrect screenshot locations. Distinguish compositor failures from genuine renderer failures. This is not a WebGL fallback, a browser-security bypass or a performance benchmark.
+description: Capture and visually verify WebGPU applications using the available extended-desktop or browser view, with native final-pipeline GPU readback when preview iframe or headless screenshots are blank, black, white, incomplete or stale, or canvas rendering triggers device loss. Use for Three.js WebGPU and TSL scene inspections, graphical changes, reference comparisons, floating-object checks, incorrect screenshot locations and scripted gameplay playthroughs reported as a labelled contact sheet. Distinguish compositor failures from genuine renderer failures. This is not a WebGL fallback, a browser-security bypass or a performance benchmark.
 ---
 
 # WebGPU Visual Verification
@@ -26,6 +26,13 @@ reference.
   implementing the workaround or diagnosing blank iframe captures.
 - Read [Evidence and troubleshooting](references/evidence-and-troubleshooting.md)
   when validating an image, recording results, or investigating stale frames.
+- Read [Scripted playthroughs](references/scripted-playthrough.md) when checking
+  gameplay rather than a single view: controls, jumps, collisions, triggers,
+  checkpoints, failure, restart or completion.
+
+The readback template also ships as `assets/webgpu-readback.js`, and
+`assets/contact-sheet.js` combines captures into one labelled image. Copy them
+into the application's development-only QA code rather than retyping them.
 
 ## 1. Establish the real application and capture environment
 
@@ -163,16 +170,45 @@ establish reference-quality artwork. Keep functional and visual acceptance
 separate. After repeated failed capture approaches, report the observed blocker
 rather than accepting untrustworthy evidence.
 
-## 8. Deliver evidence honestly
+## 8. Play the game with a scripted route
+
+When the task involves gameplay, drive the game through its development-only
+`window.__qa` hook (the `aaa-threejs-game-studio` skill's
+`assets/qa-harness.template.js`) as described in
+[Scripted playthroughs](references/scripted-playthrough.md). If the game has no
+hook yet, first follow "Add the hook to a game that has none" in that
+reference.
+
+- Reset to a named scenario and seed, then step the fixed simulation with
+  scripted inputs. Do not rely on simulated key presses and wall-clock waits.
+- Give each route segment an expectation a player would notice, and also run
+  routes that should fail, with expectations that assert the failure.
+- Capture the moments that matter onto a contact sheet and screenshot it; keep
+  individual captures on screen when the HUD must be seen. Await every
+  scenario, capture and run.
+- Check one capture against a direct screenshot (through `__qa.drawLive()`)
+  whenever direct screenshots work.
+- Run the route twice from the same scenario and seed and compare the states
+  and frame fingerprints; differences mean hidden nondeterminism to fix first.
+- Hand control back with `__qa.resume()` and confirm the live game runs.
+
+A scripted run proves what the simulation does. Feel and difficulty, input
+latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and
+frame rate and pacing on the target device still need a person or the target
+device; report them as untested rather than passed.
+
+## 9. Deliver evidence honestly
 
 Save images with matching metadata: URL without credentials, viewport, pixel
 size, scene or route position, camera, capture method and relevant diagnostics.
 Do not put tokens, cookies, signed URLs or other credentials into reports.
 
-Label each image as either:
+Label each image as one of:
 
 - Direct desktop/browser capture.
 - Staged native WebGPU final-pipeline readback.
+- Contact sheet of staged readback captures from a scripted route, with the
+  scenario, seed and pass/fail of each expectation.
 
 State whether HTML interface overlays are included. An in-place readback
 includes the HUD, menus and other DOM layers; a scene-only capture, or a

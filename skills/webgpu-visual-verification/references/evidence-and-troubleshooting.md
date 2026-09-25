@@ -22,6 +22,14 @@
 | Canvas belongs to a cross-origin frame | Use authorised browser frame access or the application's permitted direct URL. Do not bypass the same-origin policy. |
 | Readback is much darker or more saturated than the application | Tone mapping and output colour space were skipped. Route the final frame with `setOutputRenderTarget()`, not `setRenderTarget()`, and render it with the application's real final render function. |
 | Colours are washed out, channels swapped or rows corrupted | Check final-output selection, colour space, channel order, byte format and actual row stride. Three.js 0.184 to 0.186 readback pads each row to a multiple of 256 bytes when the drawing-buffer width is not a multiple of 64 pixels; remove the padding once, as the template does. |
+| The game has no `window.__qa` hook | Add one from the `aaa-threejs-game-studio` skill's `assets/qa-harness.template.js` before scripted play. Do not substitute simulated key presses and wall-clock waits. |
+| The same scripted route gives different states on repeat runs | Hidden nondeterminism: wall-clock time, unseeded random numbers, input read from devices during stepping, or a scenario that does not reset everything. Fix it before trusting any scripted result. |
+| Repeat runs give equal states but different `frameHash` values | Presentation state a scenario does not reset (pooled effects, decals, HUD animation) or animation driven by wall-clock time. Temporal effects such as TRAA also change fingerprints. |
+| `__qa` reports a NaN or infinite value at a state path | A simulation bug, often normalising a zero-length vector or dividing by a zero time step. Fix the simulation; report a deliberate infinity explicitly, for example as null. |
+| `__qa` reports that the game state changed between QA calls | Something other than QA is simulating: a loop outside `renderer.setAnimationLoop()`, a loop the game restarted, a timer, an input handler, a blur, visibility or pointer-lock handler (a capture takes the canvas out of the page, which blurs it), or `getState()` reporting something that is not simulation state, such as wall-clock time or frame rate. The message names the value that changed. Stop the cause while QA has control, then call `scenario()` again. |
+| `__qa` reports that `present()` or `simulate()` changed what it must only read | `present()` must only read simulation state (move timers and counters into `simulate()`), and `simulate()` must not change its input (keep the previous tick's input in simulation state). |
+| `__qa` reports a call made while a scenario or capture is still running | A missing `await`. Await every `scenario()`, `capture()`, `run()` and `drawLive()` before the next call. |
+| A capture shows the full scene but the live game shows mostly black | The known antialiasing case in [Native WebGPU readback](native-webgpu-readback.md): a scene drawn onto the canvas after `pipeline.render()`. Trust the direct screenshot and draw that pass inside the pipeline. |
 | The subject is hidden behind foreground geometry | Select a clearer inspection camera. Do not treat an occluded image as visual proof. |
 | No GPU validation facility is available | Report validation as unavailable, not passed. |
 
@@ -123,7 +131,10 @@ support, collision safety, target-hardware frame rate or reference-quality art.
 ## Avoid misleading conclusions
 
 - A title-screen illustration is not evidence of the in-game renderer.
-- Staged fixed-step advancement is not a continuous gameplay test.
+- A scripted, fixed-step route is not a continuous, hand-played test.
+- A scripted route that passes proves what the simulation does, not feel and
+  difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or
+  touch, audio, or frame rate and pacing on the target device.
 - Software-adapter output is not a target-hardware benchmark.
 - A scene-only readback is not proof that the HUD or menus are correct.
 - An in-place readback shows the HUD as the page shows it while the capture is

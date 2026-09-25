@@ -64,7 +64,7 @@ Deliver the whole route in simple but deliberate geometry:
 - controller and collision are stable at route edges, stairs, slopes, doors, and moving objects;
 - core combat/interaction has authoritative state and clear feedback;
 - objectives, encounter triggers, checkpoints, pause, and end state are wired;
-- a deterministic QA seed/scenario reproduces route setup; when replay is required, record the input/event trace and simulation version.
+- a deterministic QA seed/scenario reproduces route setup through the development-only `__qa` hook, and a scripted route reaches the end state; when replay is required, record the input/event trace and simulation version.
 
 The greybox is not done if it is only a free camera, autoplay, still composition, effect viewer, or disconnected mechanic test.
 

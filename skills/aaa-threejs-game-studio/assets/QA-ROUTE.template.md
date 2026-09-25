@@ -29,6 +29,17 @@ Each step must state an action and an observable result. Capture evidence after 
 | 9 | Pause, blur/focus, resize, resume |  |  |  |
 | 10 | Restart or re-enter |  |  |  |
 
+## Scripted route (`window.__qa`)
+
+- Build (development server, or QA build of the same commit):
+- Scenario and seed:
+- Script (segments with ticks, input and expectation):
+- Result of each expectation, with its tick:
+- Routes that should fail, and their results:
+- Repeat run gave identical states and frame fingerprints: yes / no
+- Contact sheet(s):
+- Needs a person or the target device (feel and difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the target device):
+
 ## Inspection shots
 
 - Opening composition:

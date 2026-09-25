@@ -41,7 +41,8 @@ scrolled pages and containers, a table cell, flexbox, CSS transforms, rounded
 corners, `object-fit`, filters, opacity, pixel-art scaling and a CSS fade-in
 on the canvas, for both in-place and scene-only captures. The same routing
 code, in the previous version of this template, was also checked with FXAA, a
-HUD or view-model scene drawn in a second pass, a minimap rendered into its
+HUD or view-model scene drawn in a second pass (see the antialiasing case
+below), a minimap rendered into its
 own target, a stencil mask and a resize. Screenshots of the presented readback
 were pixel-identical to screenshots of the application at the same pose,
 except at antialiased edges over a transparent background in 0.184.0 (see
@@ -59,6 +60,16 @@ camera also moves, a Three.js defect fixed by 0.186, so use the latest
 release. These were test scenes, not a full application, so this remains an
 adaptation template, not a universally tested drop-in utility. Check the
 installed renderer APIs before adapting it to another framework or version.
+
+One case is known not to match the screen. With antialiasing on, Three.js
+0.186 draws a `RenderPipeline`'s full-screen output to the canvas without
+multisampling but a later ordinary render with it. So a scene drawn onto the
+canvas after `pipeline.render()`, with `autoClear` off and without tone mapping
+or colour-space conversion, replaces the pipeline's image on screen with a
+nearly empty multisample buffer, while the capture draws both into one target
+and shows the intended composite rather than what the player sees. Draw such
+a HUD or view model inside the pipeline instead, and compare one capture with
+a direct screenshot whenever a direct screenshot works.
 
 ## Required access and preparation
 
@@ -163,6 +174,11 @@ API references: [Three.js output target](https://threejs.org/docs/pages/Renderer
 and [WebGPU device lifetime](https://www.w3.org/TR/webgpu/#devices).
 
 ## Browser-side adaptation template
+
+The same code ships as `assets/webgpu-readback.js`, a module exporting
+`stageNativeWebGPUFrame`. Copy that file into the application's
+development-only QA code instead of retyping the block below; keep the two
+identical when either changes.
 
 The example shows the captured pixels in the WebGPU canvas's own place on the
 page. It temporarily swaps the live canvas for a Canvas2D copy with the same
@@ -335,7 +351,9 @@ async function stageNativeWebGPUFrame({
     const height = size.y;
     if (!Number.isInteger(width) || !Number.isInteger(height) ||
         width <= 0 || height <= 0) {
-      throw new Error('Invalid drawing-buffer dimensions.');
+      throw new Error(`Invalid drawing-buffer dimensions (${width} x ${height}). ` +
+        'If the game resizes from its canvas, ignore 0 x 0 sizes: the canvas ' +
+        'leaves the page while a capture is shown.');
     }
 
     // Match the canvas's antialiasing, depth and stencil: some pipelines
