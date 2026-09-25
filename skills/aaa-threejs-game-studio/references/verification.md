@@ -10,7 +10,7 @@ Before testing, record:
 - exact build command and served artefact;
 - acceptance URL, route, query flags, seed/scenario, and save-state precondition;
 - Three.js and critical dependency versions;
-- the official-source check showing whether those resolved versions were latest stable when the project, major rebuild or Build/change began (a Repair or review records the installed version and does not upgrade because of this check);
+- the official-source check showing whether those resolved versions were latest stable when the project or major rebuild began (any other task records the installed version and does not upgrade because of this check);
 - browser version, OS, GPU, viewport, DPR, target input device, and audio output;
 - whether the run is cold, warm-cache, development, or production;
 - the acceptance requirement each capture or metric proves.
@@ -24,7 +24,7 @@ When the agent's browser has no WebGPU adapter, every gate that needs one is `bl
 Run the repository’s existing formatter, typecheck, unit/system tests, and production build. Inspect rather than guess:
 
 - package lock and exact `three` version;
-- latest-stable Three.js verification for a new project, a major rebuild or a Build/change of an existing project; a Repair or review records the installed release, and a Repair upgrades only when that release causes the defect or the user asks;
+- latest-stable Three.js verification for a new project or a major rebuild; any other task records the installed release and whether a newer one exists, and upgrades only when the change needs it (for a Repair, when that release causes the defect) or the user asks;
 - imports from `three/webgpu` and `three/tsl`;
 - no `WebGLRenderer`, legacy `EffectComposer`, `ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile`, or other old rendering path in the product; in a build or major rebuild, migrate or remove one found in existing work rather than preserving it as a compatibility branch; a Repair records it as a `fail` with a defect and removes it only when it causes the defect or the user asks;
 - asset URLs and case sensitivity;
@@ -105,7 +105,7 @@ Choose a frame-rate contract before measuring: 60 fps provides 16.67 ms total fr
 
 Measure a sustained worst-case route segment, not a quiet opening view. Use `renderer.info` as a diagnosis aid, browser tooling for main-thread/network/memory evidence, and backend timestamp data when supported. No single overlay number proves performance or quality.
 
-The workload gates (draws, triangles, memory, transfer) describe the build and may pass on the agent's own adapter, as may Gate 6's warm-up checks when that adapter is a hardware GPU; frame time, pacing and time to controllable pass only on the named device. Unless the agent runs on that device, frame time is a `needs-user` check whose card asks for numbers, not smoothness: "Frame time: on <named device>, open <URL> in a fresh window and note the seconds until you have control. During <worst beat>, record a 20-second Chrome DevTools Performance trace and attach the file, or read the <brief's percentile, such as p95> frame time and the number of frames over <16.7 or 33.3> ms for those 20 seconds from the build's frame-time readout. Give your display's refresh rate, and say whether play stuttered in the first seconds after the loading screen." Offer the readout only when it reports those two numbers over a 20-second window (an FPS counter does not); when the release build has none, add one to a QA build of the same commit. Ask for the trace when the numbers miss the target. A reply without a trace or those numbers settles smoothness only, and the frame-time gate stays `needs-user`. For a racing game, the card adds the display-rate laps in `gameplay-systems.md`, "Racing and antigravity handling contract".
+The workload gates (draws, triangles, memory, transfer) describe the build and may pass on the agent's own adapter, as may Gate 6's warm-up checks when that adapter is a hardware GPU; frame time, pacing and time to controllable pass only on the named device. Unless the agent runs on that device, frame time is a `needs-user` check whose card asks for numbers, not smoothness: "Frame time: on <named device>, open <URL> in a fresh window and note the seconds until you have control. During <worst beat>, record a 20-second Chrome DevTools Performance trace and attach the file, or read the <brief's percentile, such as p95> frame time and the number of frames over <16.7 or 33.3> ms for those 20 seconds from the build's frame-time readout. Give your display's refresh rate, and say whether play stuttered in the first seconds after the loading screen." Offer the readout only when it reports those two numbers over a 20-second window (an FPS counter does not); when the release build has none, add one behind the development boundary (`import.meta.env.DEV`), so it shows in the development preview, and label numbers read from it as development-build results. Ask for the trace when the numbers miss the target. A reply without a trace or those numbers settles smoothness only, and the frame-time gate stays `needs-user`. For a racing game, the card adds the display-rate laps in `gameplay-systems.md`, "Racing and antigravity handling contract".
 
 If over budget, diagnose before reducing fidelity:
 

@@ -167,8 +167,8 @@ those fixes. Do not repeat an entire gameplay journey for an isolated art change
 
 Passing automated tests, grounded geometry or clean GPU validation does not
 establish reference-quality artwork. Keep functional and visual acceptance
-separate. After repeated failed capture approaches, report the observed blocker
-rather than accepting untrustworthy evidence.
+separate. After repeated failed capture approaches, mark the check `blocked`
+and report the observed blocker rather than accepting untrustworthy evidence.
 
 ## 8. Play the game with a scripted route
 
@@ -195,13 +195,25 @@ reference.
 A scripted run proves what the simulation does. Feel and difficulty, input
 latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and
 frame rate and pacing on the target device still need a person or the target
-device; report them as untested rather than passed.
+device: they are `not-run` until their check card is handed to the user, then
+`needs-user` until the user reports (section 9), and a scripted run never
+passes them.
 
 ## 9. Deliver evidence honestly
 
 Save images with matching metadata: URL without credentials, viewport, pixel
 size, scene or route position, camera, capture method and relevant diagnostics.
 Do not put tokens, cookies, signed URLs or other credentials into reports.
+
+Give every check one status, the same set the `aaa-threejs-game-studio` skill
+uses: `pass` or `fail` from fresh evidence; `blocked` when the agent's own
+environment stopped a trustworthy result or left it inconclusive (no WebGPU
+adapter in its browser, a capture that stayed stale, a missing tool), saying
+what blocked it; `not-run` when not attempted, including a person check whose
+check card (a few numbered steps for the user, each an action and what should
+happen) has not been handed over; `needs-user` from the moment that card is
+handed over until the user reports, never a pass, and then `pass` or `fail`
+labelled as a user report; `not-applicable`, with the reason.
 
 Label each image as one of:
 

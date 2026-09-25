@@ -24,11 +24,11 @@ Before writing code, send one short message with:
 - two to five "done when" lines, each something a person could see or do, such as "rain stops under the bridge", "the player can jump the gap" or "a miss loses the run and restart works";
 - the provisional defaults you chose, labelled as defaults.
 
-Each "done when" line becomes a row of the final evidence table, proved by a capture (demo) or a route expectation (prototype). Word motion as a state a still can show, such as a clear trail behind a sliding drop, or prove it with two views at different clock times. Put feel and smoothness on the check card, not in these lines. Keep building while the user reads it; stop only for a choice that is expensive to reverse.
+Each "done when" line becomes a row of the final evidence table, proved by a capture (demo) or a route expectation (prototype). Word motion as a state a still can show, such as a clear trail behind a sliding drop, or prove it with two views at different clock times. Put feel and smoothness on the check card, not in these lines; when the request is about feel, such as "the jump feels floaty", write measurable stand-ins a route can prove (peak height, airtime, fall speed, response in ticks) as the lines, label their target values as defaults, and leave the feel itself to the card. Keep building while the user reads it; stop only for a choice that is expensive to reverse.
 
 ## Build
 
-- New project: resolve the latest stable Three.js (`npm view three version`, or the official releases page), pin it, and note where you checked. Keep one `three` in the lockfile, or one version in every import-map URL. An existing project keeps its release in a Repair or review; a Build/change or major rebuild upgrades it through a tested migration (`SKILL.md`, "Apply the default product contract").
+- New project: resolve the latest stable Three.js (`npm view three version`, or the official releases page), pin it, and note where you checked. Keep one `three` in the lockfile, or one version in every import-map URL. An existing project keeps its release and reports when a newer one exists; only a major rebuild upgrades it by default, and any other change upgrades, through a tested migration, only when it needs a newer release or the user asks (`SKILL.md`, "Apply the default product contract").
 - Use Vite (JavaScript or TypeScript), or a single page whose import map has all four entries (`three`, `three/webgpu`, `three/tsl`, `three/addons/`). Keep QA and capture code in its own development-only folder; the production folder layout is not required.
 - Start the renderer with the cookbook's `createRenderer()`. Catch its error and show the message in the canvas's place. In development only, log one line after `init()` with `THREE.REVISION`, `renderer.backend.isWebGPUBackend`, and the adapter the renderer uses: `renderer.backend.device.adapterInfo` where the browser exposes it, otherwise `(await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }))?.info`, labelled as a separate request. Do not change `createRenderer()` for this.
 - Give the loop one owner. Drive animated effects from your own `uniform()` clock, not TSL `time`, so the agent can stage and repeat a chosen moment (cookbook "Renderer and loop"). Advance it by a clamped frame delta: create `const timer = new THREE.Timer()` once and call `timer.connect(document)`, then in the loop call `timer.update()` and add `Math.min(timer.getDelta(), 0.25)` to the clock. It then stops while the tab is hidden and moves at most a quarter second after a capture's `cleanup()`. A demo has no fixed step, so it does not need the loop skeleton in `gameplay-systems.md`. In a prototype, anything a route checks or a capture must show, such as spins, blinks, shake or effects tied to play, comes from simulation time in `present()`; only purely decorative effects may use the frame clock, because `__qa` steps the simulation, not frames.
@@ -40,7 +40,7 @@ A prototype also needs:
 
 - its one loop playable from start to end or failure before any polish;
 - a fixed-step simulation with seeded random numbers, split into `simulate`, `present`, `draw` and `getState` as `SKILL.md` "Give the agent a way to play" describes, following `gameplay-systems.md` "Session state and clocks" (its 30, 60 and 120 Hz test is production-only);
-- the `__qa` hook from `assets/qa-harness.template.js`, installed in development only, with `webgpu-readback.js` and `contact-sheet.js` copied from the `webgpu-visual-verification` skill. That skill's `references/scripted-playthrough.md`, "Add the hook to a game that has none", gives the steps.
+- the `__qa` hook from `assets/qa-harness.template.js`, installed in development only, with `webgpu-readback.js` and `contact-sheet.js` copied from the `webgpu-visual-verification` skill. That skill's `references/scripted-playthrough.md`, "Add the hook to a game that has none", gives the steps. In an existing prototype, before the first capture of any task, check that `__qa.info()` reports `version` 2 and a `webgpu` field and that `webgpu-readback.js` and `contact-sheet.js` are present. Outside a review, replace an outdated harness file from the current template (keeping the game's adapter) and copy only what is missing; a review changes nothing and reports the outdated or missing files and the checks they stop.
 
 In both lanes, before the first capture, read the `webgpu-visual-verification` skill's `SKILL.md` and "Required access and preparation" in its `references/native-webgpu-readback.md`, plus its "Checking a newer Three.js release" when the installed release is newer than the one the readback template was checked with. You copy its ready-made `webgpu-readback.js` rather than implement the workaround, so the rest of that file is for a capture that fails, as is `references/evidence-and-troubleshooting.md`. A prototype also reads all of `references/scripted-playthrough.md` before writing routes. Save each capture's `metadata` next to its image; with the evidence table, that replaces the capture records that skill suggests.
 
@@ -82,26 +82,41 @@ shot.cleanup();
 
 Add that skill's `contact-sheet.js` too when a demo has more than three views.
 
-For the "Capture matches the screen" row, draw the same view on the canvas and take a direct screenshot:
+For the "Capture matches the screen" row, draw the same view on the canvas and take a direct screenshot. The screenshot happens between two separate steps, so the paused loop is kept on `window` where both can reach it, and any error resumes it at once:
 
 ```js
+// Step 1: pause the loop and draw the view.
 const d = window.__demo;
-const loop = d.renderer.getAnimationLoop();
-await d.renderer.setAnimationLoop(null);            // pause the loop
-d.views.peak();                                      // apply the view; never render here
-if (!d.checkView().valid) throw new Error('view not applied');
-await new Promise((r) => requestAnimationFrame(() => { d.renderFinalFrame(); r(); }));   // draw in a fresh frame
-await new Promise(requestAnimationFrame);            // let the browser present it
-await new Promise(requestAnimationFrame);
-// take the direct screenshot now, then:
-await d.renderer.setAnimationLoop(loop);             // resume the loop
+window.__demoLoop ??= d.renderer.getAnimationLoop();   // keep the first saved loop if step 1 runs twice
+await d.renderer.setAnimationLoop(null);              // pause the loop
+try {
+  d.views.peak();                                      // apply the view; never render here
+  if (!d.checkView().valid) throw new Error('view not applied');
+  await new Promise((resolve, reject) => requestAnimationFrame(() => {   // draw in a fresh frame
+    try { d.renderFinalFrame(); resolve(); } catch (error) { reject(error); }
+  }));
+  await new Promise(requestAnimationFrame);            // let the browser present it
+  await new Promise(requestAnimationFrame);
+} catch (error) {
+  await d.renderer.setAnimationLoop(window.__demoLoop);   // never leave the demo paused
+  window.__demoLoop = undefined;
+  throw error;
+}
+```
+
+Take the direct screenshot, then always run step 2, even if the screenshot failed:
+
+```js
+// Step 2: resume the loop.
+await window.__demo.renderer.setAnimationLoop(window.__demoLoop);
+window.__demoLoop = undefined;
 ```
 
 ## Evidence the demo lane must deliver
 
 | Check | Pass means | Evidence |
 | --- | --- | --- |
-| Three.js version | One `three` version in the project; for a new project, a Build/change or a major rebuild, the latest stable on the day, with where it was checked; in a Repair or review, the installed release and whether a newer one exists | command output |
+| Three.js version | One `three` version in the project; for a new project or a major rebuild, the latest stable on the day, with where it was checked; otherwise the installed release and whether a newer one exists | command output |
 | API check | `check-three-api.mjs` lists nothing, or each hit is explained | command output |
 | No legacy path | The legacy grep below prints nothing, or only comments. Each use in code is a `fail`; a Repair records it and leaves it in place unless it causes the defect or the user asks | command output |
 | Build | The build command succeeds and the grep below prints nothing. A page with no build step is `not-applicable`; say how the development-only files stay out of what is deployed | command output |
@@ -109,7 +124,7 @@ await d.renderer.setAnimationLoop(loop);             // resume the loop
 | Failure message | `createRenderer()`'s error appears as a readable message in the canvas's place | file and line; reading the code is enough for this row only |
 | Console | After load and after the captures: no uncaught error, rejected promise, device loss, GPU validation error, `running under WebGL2 backend` warning, or deprecated, renamed or removed warning | console |
 | Each "done when" line | An inspected staged readback of its view shows it (a staged readback, not a direct screenshot, because it stages the exact view and can be repeated). When the demo has DOM text or controls, take a screenshot before `cleanup()` and check the overlay matches the view | staged native WebGPU readback, with file names |
-| Capture matches the screen | Once per project, when direct screenshots work, one view captured both ways looks the same (demo: the direct steps under "Give the agent a way to look"; prototype: "Check one capture against the screen" in `scripted-playthrough.md`) | direct capture and staged readback; `blocked`, "direct screenshots unavailable", when the agent has no direct screenshot |
+| Capture matches the screen | When direct screenshots work, one view captured both ways looks the same, checked in each prompt that reports captures (these lanes keep no record of earlier runs; a Repair may list it as not replayed) (demo: the direct steps under "Give the agent a way to look"; prototype: "Check one capture against the screen" in `scripted-playthrough.md`) | direct capture and staged readback; `blocked`, "direct screenshots unavailable", when the agent has no direct screenshot |
 | Smoothness and frame rate; interaction feel when there are controls; audio when there is sound | The user's answer | `needs-user` card |
 
 The build check, run on the deployed folder (`__demo` is safe to search for because demo code never reads it):
@@ -124,7 +139,7 @@ The legacy check, run on the project's own source and HTML (add `--exclude-dir=<
 grep -rnE 'WebGLRenderer|forceWebGL|EffectComposer|ShaderMaterial|onBeforeCompile' . --include='*.[jt]s' --include='*.[jt]sx' --include='*.mjs' --include='*.html' --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=dist-qa
 ```
 
-When the agent's browser has no WebGPU adapter, the backend, console and capture rows are `blocked`, not `needs-user`. Add "it renders as described" steps to the card and ask the user to paste the development log line; a user report can then settle those rows, labelled as a user report (the backend row only from that line).
+When the agent's browser has no WebGPU adapter, the backend, console and capture rows are `blocked`, not `needs-user`; in a prototype so are the hook, main route, failure route, repeat run, HUD and live-loop rows, because the game cannot start and `__qa` installs only after its loop does. Add "it renders as described" steps to the card and ask the user to paste the development log line. A user report can confirm the rendering they observed, and the development log can confirm the backend. Scripted route, repeatability and harness checks remain `blocked` until their required evidence is supplied.
 
 ## Evidence the prototype lane must deliver
 
@@ -153,7 +168,7 @@ Name these in the report's "Not checked" line: production documents; a frame-rat
 ## Moving up
 
 - **Demo to prototype:** as soon as the work adds a goal, score, failure or rules. Add the fixed-step split and `__qa`, and switch to the prototype evidence.
-- **Prototype to production:** only when the user says "production" or clearly agrees to the switch. When the user asks the prototype for release, polish or AAA quality, or its scope needs asset pipelines at scale, several levels, an options menu, a promised frame rate on a named device, or multiplayer, send one message that proposes production and lists what it adds, make only read-only checks, and wait for the answer; in an explicitly autonomous task, stay in the prototype lane and put the proposal in the report. After a yes:
+- **Prototype to production:** when the user asks for it in their own words ("production", "make it release-ready", "polish it to AAA"), that request is the switch: do not ask again, and start with step 1. When production is only your inference, because the scope needs asset pipelines at scale, several levels, an options menu, a promised frame rate on a named device, or multiplayer, send one message that proposes production and lists what it adds, make only read-only checks, and wait for the answer; in an explicitly autonomous task, stay in the prototype lane and put the proposal in the report. Once switching:
   1. Tell the user the switch is made and what it adds: the four `docs/` documents, the production folder ownership (`app`, `game`, `render`, `world`, `assets`, `audio`, `ui`, development-only `qa`), the options baseline, a frame target on a named device, and the full gate sequence. A JavaScript prototype stays JavaScript unless the user asks for TypeScript. The same message holds what `studio-workflow.md` section 3 puts in the first production message: the pass plan, the content-blocker promise and, when its choices are clear, the pre-production checkpoint.
   2. Treat it as a major rebuild: re-check the latest stable Three.js (upgrading is right here, unlike a Repair) and run `check-three-api.mjs` before and after.
   3. Check the existing `__qa` hook as "Repairs in these lanes" describes (version 2, a `webgpu` field, both helper files), run the scaffold script and fill `docs/GAME-BRIEF.md` from the existing build and the user's goals. The existing build is the starting greybox (`studio-workflow.md`, Pass A); run the section 4 risk proofs for any risk it has not already answered.

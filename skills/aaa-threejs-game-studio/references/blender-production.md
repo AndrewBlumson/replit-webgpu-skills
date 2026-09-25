@@ -73,7 +73,7 @@ A successful Blender save or export is not acceptance. For each representative a
 2. export through the MCP using the checked-in script or versioned profile, then transfer the result into Replit;
 3. run the Khronos glTF validator and the project's semantic checks;
 4. inspect materials, normals/tangents, UV density, bounds, origin/pivot, hierarchy, animation/skin/morphs, extras, and collision/navigation proxies;
-5. load the final asset through the project's actual latest-stable Three.js loader configuration;
+5. load the final asset through the project's installed Three.js loader configuration;
 6. compare it at the real gameplay camera and lighting, plus diagnostic material and wire/proxy views;
 7. exercise animation, interaction, collision, LOD, restart/re-entry, loading, and disposal where applicable.
 

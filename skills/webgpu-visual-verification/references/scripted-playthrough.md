@@ -93,7 +93,8 @@ game's real pipeline; see [Native WebGPU readback](native-webgpu-readback.md).
 ## Check one capture against the screen
 
 When a direct browser screenshot of the game works, check the capture route
-once per game: stage a state, take `await __qa.capture(label, { keep: true })`,
+once in each run of captures you report: stage a state, take
+`await __qa.capture(label, { keep: true })`,
 screenshot it and call `__qa.release()`. Then call `await __qa.drawLive()`,
 wait two animation frames and screenshot the canvas. The two should match. Do
 not use `__qa.resume()` for this: the live loop advances the simulation on its
@@ -177,8 +178,10 @@ expected moments. The same run repeats exactly, so a fix can be checked by
 running it again.
 
 It does not show how the game feels to play. These need a person at the
-controls or the target device, and stay untested (`not-run` in the acceptance
-ledger) until checked: feel and difficulty, input latency, bindings, pointer
-lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the
-target device. Scripted input bypasses the browser input layer and the game's
-input controller, so check those separately.
+controls or the target device: feel and difficulty, input latency, bindings,
+pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing
+on the target device. Each is `not-run` until its check card is handed to the
+user, then `needs-user` until the user reports; a scripted run never passes
+it. Scripted input bypasses the browser input layer and the game's input
+controller, so check those separately. A check the agent's own environment
+stopped, such as a capture with no WebGPU adapter, is `blocked`.

@@ -11,7 +11,7 @@ A scripted `__qa` route can pass gates about what the simulation does and what i
 | Production build succeeds | not-run |  |  |
 | The production bundle contains no QA, capture or debug code (Gate 1 grep) | not-run |  |  |
 | Exact Three.js version is recorded | not-run |  |  |
-| Latest-stable Three.js status was verified from official sources when this project, a major rebuild or a Build/change began (a Repair or review records the installed release instead) | not-run |  |  |
+| Latest-stable Three.js status was verified from official sources when this project or a major rebuild began (any other change records the installed release and whether a newer one exists) | not-run |  |  |
 | `three/webgpu` and `three/tsl` imports are used | not-run |  |  |
 | Initialised backend is WebGPU; fallback is rejected | not-run |  |  |
 | Target is latest-generation Apple Silicon or an equivalently capable current high-end PC; no legacy compatibility path ships | not-run |  |  |

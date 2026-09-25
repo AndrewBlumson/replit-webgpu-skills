@@ -16,7 +16,7 @@
 | Edges over a transparent background differ from the application, or `inexactAlphaPixels` is not zero | Those pixels add light over the page, which Canvas2D cannot reproduce exactly. Use an opaque scene background for the verification capture or compare with a direct capture. |
 | Browser evaluation is destroyed during a source update | Inconclusive capture, not a proven GPU crash. Freeze edits and retry the affected view. |
 | Application works at its direct URL but not embedded | Investigate embedding separately. Do not claim the preview iframe is fixed. |
-| No usable WebGPU adapter/device can be obtained | Report the actual capability failure. Pixel readback cannot supply a missing renderer. |
+| No usable WebGPU adapter/device can be obtained | Report the actual capability failure and mark the checks it stops `blocked`. Pixel readback cannot supply a missing renderer. |
 | Device loss follows rendering to the canvas | Record the loss and render sequence. Retry in a fresh renderer/device with readable final output configured before the first render; keep startup, warm-up and cleanup offscreen. Follow the [offscreen startup procedure](native-webgpu-readback.md#offscreen-startup-after-canvas-triggered-device-loss). |
 | A fresh offscreen startup also loses its device | Retain diagnostics and report the observed failure. Stop repeating the same attempt; do not infer that switching targets revives a lost device. |
 | Canvas belongs to a cross-origin frame | Use authorised browser frame access or the application's permitted direct URL. Do not bypass the same-origin policy. |
@@ -31,7 +31,7 @@
 | `__qa` reports a call made while a scenario or capture is still running | A missing `await`. Await every `scenario()`, `capture()`, `run()` and `drawLive()` before the next call. |
 | A capture shows the full scene but the live game shows mostly black | The known antialiasing case in [Native WebGPU readback](native-webgpu-readback.md): a scene drawn onto the canvas after `pipeline.render()`. Trust the direct screenshot and draw that pass inside the pipeline. |
 | The subject is hidden behind foreground geometry | Select a clearer inspection camera. Do not treat an occluded image as visual proof. |
-| No GPU validation facility is available | Report validation as unavailable, not passed. |
+| No GPU validation facility is available | Mark validation `blocked` ("unavailable"), never passed. |
 
 ## Three independent acceptance gates
 
@@ -91,7 +91,7 @@ Presentation (metadata.presentation: in-place / full-viewport; an in-place captu
 DOM overlays included:
 Transparent pixels (non-opaque / inexact):
 Relevant page/console/navigation diagnostics:
-GPU validation: passed / failed / unavailable / not run
+GPU validation: `pass` / `fail` / `blocked` (unavailable) / `not-run`
 Pixel sanity checks:
 Personally inspected: yes / no
 Recognisable scene evidence:

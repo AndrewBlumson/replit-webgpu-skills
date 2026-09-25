@@ -56,8 +56,10 @@ the page, shadows and skinned meshes (the stale-frame notes on them come from
 the Three.js source), and more than one TRAA scene; a canvas inside a shadow
 root was checked only in a DOM test without WebGPU. In 0.184.0 a
 RenderPipeline can draw a moving object at its previous position when the
-camera also moves, a Three.js defect fixed by 0.186, so use the latest
-release. These were test scenes, not a full application, so this remains an
+camera also moves, a Three.js defect fixed by 0.186: a new project uses the
+latest release, and an existing project on an older one reports it as a
+known limit of that release rather than upgrading just for captures. These
+were test scenes, not a full application, so this remains an
 adaptation template, not a universally tested drop-in utility. Check the
 installed renderer APIs before adapting it to another framework or version.
 

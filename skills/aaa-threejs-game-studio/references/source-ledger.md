@@ -1,6 +1,6 @@
 # Primary-source discovery ledger
 
-This ledger is a discovery map, not a version lock. At the start of every new project, major rebuild or Build/change of an existing project, resolve the latest stable releases from official release pages, inspect the matching tagged source and migration guidance, and record the exact selected versions in that project's lockfile and report (in the production lane, also its asset manifest and acceptance evidence). Never copy a release number from this reusable skill into a new build.
+This ledger is a discovery map, not a version lock. At the start of every new project or major rebuild, and before any upgrade, resolve the latest stable releases from official release pages, inspect the matching tagged source and migration guidance, and record the exact selected versions in that project's lockfile and report (in the production lane, also its asset manifest and acceptance evidence). Never copy a release number from this reusable skill into a new build.
 
 Links to moving branches or current documentation are entry points. After resolving a stable release, switch source links to that release's tag before relying on an implementation detail. Re-check primary sources whenever the project upgrades.
 
