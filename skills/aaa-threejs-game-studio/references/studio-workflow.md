@@ -1,6 +1,6 @@
 # Studio workflow for one premium browser-game vertical slice
 
-Use this workflow when the request is to build or substantially rebuild a game, level, or playable showcase. It is a production sequence, not a waterfall: return to an earlier phase when rendered evidence disproves an assumption.
+Use this workflow in the production lane, when the request is to build or substantially rebuild a polished game, level, or playable showcase. Demo and prototype work follows `demo-prototype-lanes.md`. It is a production sequence, not a waterfall: return to an earlier phase when rendered evidence disproves an assumption.
 
 ## 1. Establish the actual task
 
@@ -9,9 +9,9 @@ Classify the request before editing:
 - **Build:** create the playable vertical slice and verify it.
 - **Repair:** reproduce the named defect in the live route, make the narrowest durable fix, and replay adjacent accepted behaviour.
 - **Review:** inspect and report evidence; do not mutate unless asked.
-- **Research/prototype:** answer one technical risk with a disposable proof, then record the adoption decision.
+- **Research/proof:** answer one technical risk with a disposable proof, then record the adoption decision. A playable game idea is the prototype lane, not this.
 
-For an existing project, establish the exact checkout, resolved package versions, latest-stable status, renderer, running URL, accepted route, active writers, asset licences, and dirty files. Preserve unrelated work. The rendered route is the product; a successful command is supporting evidence only.
+For an existing project, establish the exact checkout, resolved package versions, latest-stable status, renderer, running URL, accepted route, active writers, asset licences, and dirty files. Record the latest-stable status as a fact; a Repair does not upgrade because of it. Preserve unrelated work. The rendered route is the product; a successful command is supporting evidence only.
 
 ## 2. Treat references as evidence, not hidden requirements
 
@@ -26,7 +26,9 @@ Franchise shorthand such as “make Call of Duty” describes expected responsiv
 
 ## 3. Write the vertical-slice contract
 
-Run `scripts/scaffold_game_docs.py <project>` to create the durable brief, asset-production ledger, acceptance ledger, and QA route if equivalents do not already exist. Fill `docs/GAME-BRIEF.md` before high-cost art or systems work, and keep `docs/ASSET-PIPELINE.md` current whenever asset decisions or recipes change.
+Open with one message that gives the lane, the strict WebGPU target, the labelled defaults, the risk proofs in section 4 (in isolated spikes whose code is deleted or kept apart after the adopt/reject decision), the pass plan in section 5, and a promise to report any required content the available tools cannot make as a production blocker rather than fill the route with placeholders. For a new game, also offer the lighter lane: "Say 'prototype' for a quicker playable version checked by scripted play, without production documents." Fold the pre-production checkpoint (`SKILL.md`, "Apply the default product contract") into it when those choices are already clear; otherwise send the checkpoint before high-cost final art. Either way, start high-cost final art only after the user has answered it, unless the task is explicitly autonomous.
+
+Run `python3 <skill folder>/scripts/scaffold_game_docs.py <absolute project path>` (see `SKILL.md`) to create the durable brief, asset-production ledger, acceptance ledger, and QA route if equivalents do not already exist. Fill `docs/GAME-BRIEF.md` before high-cost art or systems work, and keep `docs/ASSET-PIPELINE.md` current whenever asset decisions or recipes change.
 
 The brief must bind:
 
@@ -50,7 +52,7 @@ A proof passes only when it answers its risk with rendered and measured evidence
 
 - exact dependency and version;
 - public API and ownership boundary;
-- target-device result;
+- target-device result, or the `needs-user` card that asks for it (the adoption stays provisional until the result returns);
 - cleanup/lifecycle behaviour;
 - quality and performance fallback.
 

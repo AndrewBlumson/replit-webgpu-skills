@@ -2,7 +2,7 @@
 
 This is a per-project production record, not a universal optimisation preset. Preserve source masters and raw exports; only validated delivery assets may ship.
 
-Status values: `not-run`, `pass`, `fail`, `blocked`, `not-applicable`. The asset-lane decision and native-runtime costs apply to every project. Mark GLB-specific gates `not-applicable` with a recorded reason for a fully native Three.js/TSL asset lane; mark Blender-specific fields `not-applicable` when Blender is not selected.
+Status values: `not-run`, `pass`, `fail`, `blocked`, `needs-user`, `not-applicable`. `needs-user` means the check needs a person or the target device, its card is under "Needs-user checks" in `docs/QA-ROUTE.md` and has been handed to the user, and the result is not yet known; it is never a pass. The asset-lane decision and native-runtime costs apply to every project. Mark GLB-specific gates `not-applicable` with a recorded reason for a fully native Three.js/TSL asset lane; mark Blender-specific fields `not-applicable` when Blender is not selected.
 
 Replit Agent may operate Blender only through a configured, verified MCP connection. Without it, use native code or supplied/licensed assets. For supplied GLBs without source-authoring access, mark live DCC authoring/re-export fields `not-applicable`; retain provenance, delivery optimisation and runtime validation.
 

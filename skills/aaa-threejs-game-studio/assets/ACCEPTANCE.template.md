@@ -1,16 +1,17 @@
 # Vertical-slice acceptance ledger
 
-Status values: `not-run`, `pass`, `fail`, `blocked`, `not-applicable`. Use `not-applicable` only with a recorded reason. A pass needs current evidence from the exact build and route.
+Status values: `not-run`, `pass`, `fail`, `blocked`, `needs-user`, `not-applicable`. Use `not-applicable` only with a recorded reason. `needs-user` means the check needs a person or the target device, its card is under "Needs-user checks" in `docs/QA-ROUTE.md` and has been handed to the user, and the result is not yet known; it is never a pass. A pass needs current evidence from the exact build and route. Reword or add rows to fit the genre (a racing game needs its checkpoint, wrong-way and reset rows), but keep every gate covered.
 
-A scripted `__qa` route can pass gates about what the simulation does and what its inspected captures show. A gate that also needs a person or the target device (feel and difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the target device) stays `not-run` until that check is done; note the scripted evidence in its Evidence column.
+A scripted `__qa` route can pass gates about what the simulation does and what its inspected captures show. A gate that also needs a person or the target device (feel and difficulty, input latency, bindings, pointer lock and mouse-look, gamepad or touch, audio, and frame rate and pacing on the target device) stays `not-run` until its card is handed over, then `needs-user` until the user reports; note the scripted evidence in its Evidence column. When the user reports, record `pass` or `fail` with "user report", the date, device and browser. The release decision stays "not accepted" while any gate that is not `not-applicable` is anything other than `pass`. If the user decides to release anyway, record "released by user decision; unverified: <gates>" under Accepted limitations; those gates keep their status and never count as passes.
 
 ## Build and runtime contract
 
 | Gate | Status | Evidence | Defect/owner |
 | --- | --- | --- | --- |
 | Production build succeeds | not-run |  |  |
+| The production bundle contains no QA, capture or debug code (Gate 1 grep) | not-run |  |  |
 | Exact Three.js version is recorded | not-run |  |  |
-| Latest-stable Three.js status was verified from official sources when this project or major rebuild began | not-run |  |  |
+| Latest-stable Three.js status was verified from official sources when this project, a major rebuild or a Build/change began (a Repair or review records the installed release instead) | not-run |  |  |
 | `three/webgpu` and `three/tsl` imports are used | not-run |  |  |
 | Initialised backend is WebGPU; fallback is rejected | not-run |  |  |
 | Target is latest-generation Apple Silicon or an equivalently capable current high-end PC; no legacy compatibility path ships | not-run |  |  |
@@ -39,7 +40,7 @@ Blender authoring in Replit requires a configured, verified MCP connection. For 
 | Gate | Status | Evidence | Defect/owner |
 | --- | --- | --- | --- |
 | Player gains control and the scripted `__qa` route reaches the end state | not-run |  |  |
-| Input is responsive on the target input device, played by hand | not-run |  |  |
+| Input is responsive on the target input device, played by hand (usually `needs-user`) | not-run |  |  |
 | Traversal and collision remain valid across the route | not-run |  |  |
 | Core interaction/combat loop works repeatedly | not-run |  |  |
 | Enemies/hazards perceive, act, react, and resolve | not-run |  |  |
@@ -57,7 +58,7 @@ Blender authoring in Replit requires a configured, verified MCP connection. For 
 | Lighting directs the route and preserves gameplay readability | not-run |  |  |
 | VFX interact with surfaces, movement, depth, and local conditions | not-run |  |  |
 | Animation has transitions, reactions, and no obvious foot/weapon sliding | not-run |  |  |
-| Spatial, weapon, impact, ambience, UI, and music layers are balanced | not-run |  |  |
+| Spatial, weapon, impact, ambience, UI, and music layers are balanced (usually `needs-user`) | not-run |  |  |
 | HUD communicates state without hiding the playfield | not-run |  |  |
 | No placeholder, debug, provenance, or licence defect is visible | not-run |  |  |
 
@@ -65,21 +66,30 @@ Blender authoring in Replit requires a configured, verified MCP connection. For 
 
 | Gate | Status | Evidence | Defect/owner |
 | --- | --- | --- | --- |
-| Named frame-time target holds at the worst encounter | not-run |  |  |
+| Named frame-time target holds at the worst encounter on the named device, against the brief's percentile policy (usually `needs-user`; the user's report must include a trace or the numbers) | not-run |  |  |
 | Shader/pipeline warm-up prevents first-use combat stutter | not-run |  |  |
 | Draw, triangle, memory, and transfer budgets are measured | not-run |  |  |
 | Resize, DPR change, visibility change, and input-lock recovery work | not-run |  |  |
 | Restart/re-entry does not duplicate loops, listeners, audio, or GPU resources | not-run |  |  |
 | Loading and progress UI remain honest on a cold load | not-run |  |  |
 
+## Release route
+
+| Gate | Status | Evidence | Defect/owner |
+| --- | --- | --- | --- |
+| The deployment runs the accepted build (its build identifier matches the accepted local artefact) | not-run |  |  |
+| The full route is played by hand on the deployment from a `needs-user` card, and the user reports the result | not-run |  |  |
+
 ## Final judgement
 
 - Exact acceptance URL:
+- Deployment URL:
 - Commit/build identifier:
 - Browser, OS, GPU, viewport, and input device:
 - Intended target or disclosed proxy:
 - Deterministic seed/scenario:
 - Input/event trace and simulation version when testing replay:
+- Checks handed to the user (`needs-user`) and their cards in `docs/QA-ROUTE.md`:
 - Accepted limitations:
 - Rejected claims:
 - Release decision:

@@ -50,7 +50,7 @@ Budget shadow-casting lights and update cadence explicitly. Use baked or authore
 
 ## Make VFX causal and spatial
 
-Every effect needs an emitter cause, world-space behaviour, collision or occlusion rule where visible, lifetime, lighting/material interaction, audio relationship, and performance tier. Organise effects into layers:
+Every world effect needs an emitter cause, world-space behaviour, collision or occlusion rule where visible, lifetime, lighting/material interaction, audio relationship, and performance tier (a silent demo has no audio relationship, and the demo and prototype lanes need only one performance tier). Organise effects into layers:
 
 - **primary:** readable gameplay event or hero set piece;
 - **secondary:** debris, smoke, sparks, splashes, trails, and impact response;
@@ -58,7 +58,7 @@ Every effect needs an emitter cause, world-space behaviour, collision or occlusi
 - **surface:** decals, scorch, wetness, ripples, footprints, bullet marks;
 - **camera/UI:** restrained shake, exposure response, damage/readability feedback.
 
-For precipitation, model screen coverage and depth distribution separately from world count. Give drops plausible velocity, wind, streak scale, near/far density, shelter or volume collision, impact-derived splashes/ripples, and wet-surface response. Use independent background rain only as a deliberate cheap layer; do not present random timed splashes as proof of physical drop impacts.
+For precipitation, model screen coverage and depth distribution separately from world count. Give drops plausible velocity, wind, streak scale, near/far density, shelter or volume collision, impact-derived splashes/ripples, and wet-surface response. Use independent background rain only as a deliberate cheap layer; do not present random timed splashes as proof of physical drop impacts. Rain on a window or lens is a camera-space effect: give it the glass's own causes (drops forming, merging, running and refracting the view) instead of these world layers, and never present it as world rain.
 
 Use transparent particles cautiously: overdraw, sorting, alpha noise, and post-processing can dominate cost. Prefer opaque or alpha-tested debris where appropriate, spatial bins or culled emitters, pooled lifetimes, and quality tiers based on measured worst-case concurrency.
 
@@ -102,6 +102,8 @@ Use a small, coherent typography and colour system. The HUD must communicate obj
 Scale and test at multiple aspect ratios and DPR values. Pointer-lock instructions, capability failures, loading progress, and audio-unlock states are product UI, not temporary scaffolding.
 
 ## Reject these common “AI demo” signatures
+
+The first two items and the last apply whenever a result is presented as a game, and the items about navigation, encounters and enemies whenever there is gameplay. A demo-lane result may be a still or autoplay view, but the report calls it a demo, never a game. The rest apply in every lane.
 
 - a still hero image with no playable route;
 - an autoplay camera used to imply a game;

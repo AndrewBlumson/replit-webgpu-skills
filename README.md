@@ -4,7 +4,7 @@ Two complementary skills for building and visually checking ambitious Three.js W
 
 | Skill | Purpose | Download |
 | --- | --- | --- |
-| [AAA Three.js Game Studio](skills/aaa-threejs-game-studio/SKILL.md) | Guides complete playable game production, art direction, native WebGPU/TSL rendering, asset pipelines and live verification. Includes a GPU-tested WebGPU/TSL cookbook, a symptom-and-fix table and a script that checks a project against its installed Three.js release. | [Download ZIP](https://github.com/AndrewBlumson/replit-webgpu-skills/raw/refs/heads/main/downloads/aaa-threejs-game-studio.zip) |
+| [AAA Three.js Game Studio](skills/aaa-threejs-game-studio/SKILL.md) | Guides complete playable game production, art direction, native WebGPU/TSL rendering, asset pipelines and live verification, in a demo, prototype or full production lane so the proof and paperwork fit the request. Includes a GPU-tested WebGPU/TSL cookbook, a symptom-and-fix table and a script that checks a project against its installed Three.js release. | [Download ZIP](https://github.com/AndrewBlumson/replit-webgpu-skills/raw/refs/heads/main/downloads/aaa-threejs-game-studio.zip) |
 | [WebGPU Visual Verification](skills/webgpu-visual-verification/SKILL.md) | Guides inspection of real rendered frames, including native GPU readback when ordinary screenshots are blank or stale. | [Download ZIP](https://github.com/AndrewBlumson/replit-webgpu-skills/raw/refs/heads/main/downloads/webgpu-visual-verification.zip) |
 
 ## Use in Replit

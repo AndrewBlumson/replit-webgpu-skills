@@ -1,6 +1,6 @@
 # Latest stable Three.js WebGPU and TSL production contract
 
-Resolve the latest stable Three.js release from official sources when a new project or major rebuild begins, then pin the exact resolved release in that project's lockfile and evidence. A release number in this skill records what its examples were tested with, not the version to install. TSL, node materials, compute, post-processing, and WebGPU internals change between releases; inspect the matching source and migration guidance before implementation or upgrade.
+Resolve the latest stable Three.js release from official sources when a new project, a major rebuild or a Build/change of an existing project begins (a Repair or review keeps the installed release), then pin the exact resolved release in that project's lockfile and evidence. A release number in this skill records what its examples were tested with, not the version to install. TSL, node materials, compute, post-processing, and WebGPU internals change between releases; inspect the matching source and migration guidance before implementation or upgrade.
 
 This file sets the rules. `webgpu-cookbook.md` has tested code for them (renderer, environment, shadows, TSL, bloom, particles, instancing, warm-up, loaders), `failure-modes.md` maps symptoms to causes, and `scripts/check-three-api.mjs` lists where the project uses names the installed release has deprecated or no longer exports (changed arguments and options are invisible to it; see the cookbook's renamed-and-removed tables).
 
@@ -10,7 +10,7 @@ This file sets the rules. `webgpu-cookbook.md` has tested code for them (rendere
 
 `createRenderer()` asks for a full (core) WebGPU adapter first, so a device that offers only compatibility-mode WebGPU is refused before `init()`. If that check is changed, read `renderer.backend.compatibilityMode` after `init()`: when it is `true`, Three.js disables MSAA and per-channel MRT blending, so treat the device as below the strict target, record the adapter, and keep that route unaccepted rather than adding a lower tier.
 
-Show capability/init failure as a designed UI state with requirements and recovery advice. Do not leave a blank canvas or quietly lower the renderer contract. Keep the pixel-ratio cap and antialiasing choice in a quality profile; measure them on the target device.
+Show capability/init failure as a designed UI state with requirements and recovery advice; in the demo and prototype lanes, a clear message in the canvas's place is enough. Do not leave a blank canvas or quietly lower the renderer contract. In the production lane, keep the pixel-ratio cap and antialiasing choice in a quality profile and measure them on the target device.
 
 Use `renderer.setAnimationLoop()` rather than a separate `requestAnimationFrame()` owner. Initialise before code that needs backend state, compute, compilation, or feature inspection.
 
@@ -93,7 +93,7 @@ Treat post effects as costed systems:
 - **Lens effects, grain, vignette, chromatic shift:** tie them to authored camera/optic or state decisions. They are not a default “cinematic” stack.
 - **Reflections:** choose per surface class among probes, SSR, authored planar reflection, or an approximation. Give planar/probe updates an explicit cadence and quality scale.
 
-Expose raw beauty, depth, normal, velocity, emissive, AO, reflection, and key material views in development so an attractive composite cannot hide broken inputs.
+In the production lane, expose raw beauty, depth, normal, velocity, emissive, AO, reflection, and key material views in development so an attractive composite cannot hide broken inputs.
 
 ## Lighting and shadows
 
@@ -135,6 +135,8 @@ For a camera-local height/depth field, restore renderer state with `try/finally`
 5. `await renderer.backend.device.queue.onSubmittedWorkDone()`. `render()` returns before the GPU has built the pipelines those frames created; without this wait, play froze for 0.3 to 1 second after the loading screen on a machine that had not compiled the shaders before. Do not use `renderer.waitForGPU()`: it was removed and now only logs an error.
 
 `webgpu-cookbook.md` has the tested `warmUp()`. Without a `RenderPipeline`, move the camera the same way, `await renderer.compileAsync(scene, camera)`, render one real frame, then wait the same way. Neither proves that hidden, dynamic or later-spawned materials, layer cameras, render targets or auxiliary passes are warm; the manifest below covers them.
+
+The manifest and the first-encounter check below are production-lane work; the demo and prototype lanes use the cookbook's `warmUp()` without them.
 
 Maintain a warm-up manifest containing:
 

@@ -10,7 +10,7 @@
 - Supported hardware floor (latest-generation Apple Silicon or equivalent high-end PC):
 - Latest-stable Three.js verification source/date and resolved project lock evidence:
 - Renderer contract (strict native WebGPU/TSL; no legacy fallback):
-- Frame-rate target and target device:
+- Frame-rate target, target device and percentile policy (for example: p95 within 16.7 ms, and at most N frames over it in 20 seconds at the worst beat):
 - Vertical-slice boundary:
 - Approximate playable duration and numeric content boundary:
 - Single-player/multiplayer contract:
@@ -94,7 +94,7 @@ Choose three to five observable pillars. Avoid adjectives without a production i
 
 ## Budgets
 
-Record starting budgets as hypotheses, then replace them with measurements from the named target device and worst route beat.
+Record starting budgets as hypotheses, then replace them with measurements at the worst route beat: frame times and time to controllable from the named target device, the other rows from any WebGPU adapter, labelled with the adapter.
 
 | Budget | Target | Worst-case measurement | Evidence route | Action if exceeded |
 | --- | --- | --- | --- | --- |
@@ -108,9 +108,11 @@ Record starting budgets as hypotheses, then replace them with measurements from 
 
 ## Risks and proof spikes
 
-| Risk | Smallest proof | Pass/fail evidence | Fallback that preserves the fantasy |
-| --- | --- | --- | --- |
-|  |  |  |  |
+Keep each proof in an isolated spike outside the game source; delete or isolate it after the adopt/reject decision. Before promoting a proof, record the adoption details listed in section 4 of the game skill's `references/studio-workflow.md`.
+
+| Risk | Smallest proof | Pass/fail evidence | Dependency and version | Target-device result or card | Decision and cleanup | Fallback that preserves the fantasy |
+| --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |
 
 ## Definition of done
 

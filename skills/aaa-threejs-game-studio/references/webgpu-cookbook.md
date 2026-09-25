@@ -3,8 +3,9 @@
 Working patterns for the parts of a Three.js WebGPU game that agents most
 often get wrong from memory. Every snippet was run on a real WebGPU adapter
 with Three.js 0.186.1, the latest release when written, and in a Vite
-project; see the version note at the end. Read `renderer-tsl.md` for the
-rules these patterns follow.
+project; see the version note at the end. The rules these patterns follow
+are in `renderer-tsl.md`; the demo and prototype lanes read only the parts
+of it that `demo-prototype-lanes.md` names.
 
 Each code block is written as its own module: it uses `THREE` from
 `import * as THREE from 'three/webgpu'` and lists only its other imports.
@@ -75,7 +76,7 @@ published folder, or use CDN URLs pinned to the exact installed version.
 // cookbook: renderer
 async function createRenderer(canvasParent) {
   if (!navigator.gpu || (await navigator.gpu.requestAdapter()) === null) {
-    throw new Error('This game needs a browser and GPU with WebGPU.');
+    throw new Error('This needs a browser and GPU with WebGPU.');
   }
   const renderer = new THREE.WebGPURenderer({ antialias: true, powerPreference: 'high-performance' });   // 4x MSAA
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -334,6 +335,7 @@ function createParticles(renderer, count = 100000) {
     position.x = hash(instanceIndex).sub(0.5).mul(20);
     position.y = hash(instanceIndex.add(3)).mul(10);
     position.z = hash(instanceIndex.add(7)).sub(0.5).mul(20);
+    velocities.element(instanceIndex).assign(vec3(0, 0, 0));   // so init can also reset the effect
   })().compute(count);
   const update = Fn(() => {
     const position = positions.element(instanceIndex);
@@ -356,7 +358,7 @@ function createParticles(renderer, count = 100000) {
   sprites.count = count;                                // one draw call for all
   sprites.frustumCulled = false;
   renderer.compute(init);                               // after renderer.init()
-  return { sprites, update, delta };                    // each frame: delta.value = dt; renderer.compute(update)
+  return { sprites, init, update, delta };              // each frame: delta.value = dt; renderer.compute(update)
 }
 ```
 
@@ -464,7 +466,8 @@ async function warmUp(renderer, pipeline, passes, camera, overview, computeNodes
   `onSubmittedWorkDone()` as above.
 - Never call `warmUp()` or a pass's `compileAsync()` while the animation loop
   is rendering: stop it with `renderer.setAnimationLoop(null)` first.
-- Check it worked, on a cold shader cache: change a shader constant or use
+- Check it worked (production lane only; the demo and prototype lanes skip
+  this bullet and the next), on a cold shader cache: change a shader constant or use
   a machine that has not run the game, because the browser caches compiled
   shaders across restarts. Record the time between animation frames for the
   first seconds after the loading screen, at normal vsync; every interval
@@ -613,3 +616,5 @@ official `webgpu_*` examples, and each snippet was run on an Apple Metal
 WebGPU adapter. When the installed release is newer, run
 `scripts/check-three-api.mjs` and re-check any snippet you use against that
 release's examples before relying on it.
+
+When the installed release is older, as in a Repair or review that keeps the project's release, run the same script and check each snippet against the installed source before using it. In "Renamed and removed", a replacement whose "Since" release is later than the installed one does not exist there yet, and one marked "by" may not; keep the old name when the installed source lacks the new one. Do not upgrade just to make a snippet fit. In 0.184.0, and possibly 0.185.x (the fix is in 0.186), a `RenderPipeline` can draw a moving object at its previous position when the camera also moves. In a Repair or review, treat a capture that shows this as a known limit of that release, confirm it with a direct screenshot, and report it rather than upgrading, unless it is the defect being repaired; this replaces the `webgpu-visual-verification` skill's advice to use the latest release.

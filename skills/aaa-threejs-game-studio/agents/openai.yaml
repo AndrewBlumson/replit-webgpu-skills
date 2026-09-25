@@ -1,4 +1,4 @@
 interface:
   display_name: "AAA Three.js Game Studio"
-  short_description: "Build premium high-end WebGPU game vertical slices"
-  default_prompt: "Use $aaa-threejs-game-studio to build a polished, original high-end Replit game with latest stable Three.js, native WebGPU/TSL, complete gameplay and live rendered QA; use Blender only through a configured, verified MCP connection."
+  short_description: "Build WebGPU games, prototypes and demos, up to AAA vertical slices"
+  default_prompt: "Use $aaa-threejs-game-studio to build an original Replit WebGPU demo, prototype or polished game with the latest stable Three.js and native WebGPU/TSL, choosing the lane that fits and proving the result with rendered evidence; use Blender only through a configured, verified MCP connection."
