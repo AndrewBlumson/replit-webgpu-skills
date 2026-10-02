@@ -5,7 +5,7 @@
 | Observation | Interpretation and next step |
 | --- | --- |
 | Direct screenshot is blank, but a known-colour native readback is correct | Likely capture/compositor fault. Use native readback presentation and label it. |
-| Both normal output and readback are blank | Investigate application initialisation, camera, render submission, resources and validation errors. Do not assume an iframe-only problem. |
+| Both normal output and readback are blank | Investigate application initialisation, camera, render submission, resources and validation errors, and check the readback route itself (final-output selection, freshness, settle frames) as `SKILL.md` section 2 describes. Do not assume an iframe-only problem; keep visual verification `blocked` until the cause is established. |
 | Image is nonblank but shows the starting location instead of the requested waypoint | Reject it. Check state advancement, interpolation, rendered transforms, camera, whether every render loop was paused, and presentation freshness. |
 | CPU state and transforms are correct but pixels show an older scene | Metadata cannot prove GPU freshness. Three.js updates pipeline passes, most effects, shadow maps and skinned-mesh bones at most once per animation frame, so a capture rendered in the same frame as the application's loop shows the loop's pose, even without post-processing. Pause the loop and render in a fresh animation frame, as the template does. |
 | The helper reports that `renderer.render()` was called outside `renderFinalFrame()` | A render loop outside `renderer.setAnimationLoop()` is still running, such as the application's own `requestAnimationFrame()` loop, or `synchroniseFrame()` or `checkPose()` renders. Pause the loop through the harness, move the rendering out of those functions and retry. |
@@ -15,7 +15,7 @@
 | The HUD is missing from a readback | Check `includesDOMOverlays`: scene-only captures and the full-viewport fallback exclude overlays by design. |
 | Edges over a transparent background differ from the application, or `inexactAlphaPixels` is not zero | Those pixels add light over the page, which Canvas2D cannot reproduce exactly. Use an opaque scene background for the verification capture or compare with a direct capture. |
 | Browser evaluation is destroyed during a source update | Inconclusive capture, not a proven GPU crash. Freeze edits and retry the affected view. |
-| Application works at its direct URL but not embedded | Investigate embedding separately. Do not claim the preview iframe is fixed. |
+| Application works at its direct URL but not embedded | Investigate embedding separately, and report the embedded result separately. |
 | No usable WebGPU adapter/device can be obtained | Report the actual capability failure and mark the checks it stops `blocked`. Pixel readback cannot supply a missing renderer. |
 | Device loss follows rendering to the canvas | Record the loss and render sequence. Retry in a fresh renderer/device with readable final output configured before the first render; keep startup, warm-up and cleanup offscreen. Follow the [offscreen startup procedure](native-webgpu-readback.md#offscreen-startup-after-canvas-triggered-device-loss). |
 | A fresh offscreen startup also loses its device | Retain diagnostics and report the observed failure. Stop repeating the same attempt; do not infer that switching targets revives a lost device. |
@@ -140,7 +140,7 @@ support, collision safety, target-hardware frame rate or reference-quality art.
 - An in-place readback shows the HUD as the page shows it while the capture is
   on screen, with the application paused. It does not prove that the HUD
   updates correctly during play.
-- A successful direct page is not proof that the iframe works.
+- A successful direct page is not proof of how the app behaves when embedded.
 - Passing tests and GPU checks is not proof of visual quality.
 - A skill documents a workflow. It cannot guarantee that every browser,
   framework or future renderer version exposes the same capture APIs.

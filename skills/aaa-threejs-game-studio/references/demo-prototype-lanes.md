@@ -22,7 +22,8 @@ Before writing code, send one short message with:
 - the lane, and how to switch ("Say 'production' for the full vertical-slice process");
 - the target: desktop Chrome or Edge with WebGPU on a capable GPU, with no WebGL fallback;
 - two to five "done when" lines, each something a person could see or do, such as "rain stops under the bridge", "the player can jump the gap" or "a miss loses the run and restart works";
-- the provisional defaults you chose, labelled as defaults.
+- the provisional defaults you chose, labelled as defaults;
+- in an existing project, any WebGL or legacy rendering branch that works for players, which is removed only if the user agrees.
 
 Each "done when" line becomes a row of the final evidence table, proved by a capture (demo) or a route expectation (prototype). Word motion as a state a still can show, such as a clear trail behind a sliding drop, or prove it with two views at different clock times. Put feel and smoothness on the check card, not in these lines; when the request is about feel, such as "the jump feels floaty", write measurable stand-ins a route can prove (peak height, airtime, fall speed, response in ticks) as the lines, label their target values as defaults, and leave the feel itself to the card. Keep building while the user reads it; stop only for a choice that is expensive to reverse.
 
@@ -72,12 +73,12 @@ Copy `webgpu-readback.js` from the `webgpu-visual-verification` skill's `assets`
 ```js
 const { stageNativeWebGPUFrame } = await import('/src/qa/webgpu-readback.js');
 const d = window.__demo;
-const shot = await stageNativeWebGPUFrame({
+window.__shot = await stageNativeWebGPUFrame({
   THREE: d.THREE, renderer: d.renderer, renderFinalFrame: d.renderFinalFrame,
   synchroniseFrame: d.views.peak, checkPose: d.checkView,
 });
-// screenshot and inspect now, then:
-shot.cleanup();
+// End this call here and take the screenshot. Then, in a separate call, even
+// if the screenshot failed: window.__shot.cleanup(); delete window.__shot;
 ```
 
 Add that skill's `contact-sheet.js` too when a demo has more than three views.
@@ -118,13 +119,13 @@ window.__demoLoop = undefined;
 | --- | --- | --- |
 | Three.js version | One `three` version in the project; for a new project or a major rebuild, the latest stable on the day, with where it was checked; otherwise the installed release and whether a newer one exists | command output |
 | API check | `check-three-api.mjs` lists nothing, or each hit is explained | command output |
-| No legacy path | The legacy grep below prints nothing, or only comments. Each use in code is a `fail`; a Repair records it and leaves it in place unless it causes the defect or the user asks | command output |
+| No legacy path | The legacy grep below prints nothing, or only comments. Each use in code is a `fail`; a Repair records it, may make a narrow fix inside it, and leaves it in place unless the user agrees to remove it or, for a branch that does not work for players, it causes the defect | command output |
 | Build | The build command succeeds and the grep below prints nothing. A page with no build step is `not-applicable`; say how the development-only files stay out of what is deployed | command output |
 | WebGPU backend | `renderer.backend.isWebGPUBackend === true` after `init()`, with the revision and the adapter where exposed | the development log line |
 | Failure message | `createRenderer()`'s error appears as a readable message in the canvas's place | file and line; reading the code is enough for this row only |
 | Console | After load and after the captures: no uncaught error, rejected promise, device loss, GPU validation error, `running under WebGL2 backend` warning, or deprecated, renamed or removed warning | console |
 | Each "done when" line | An inspected staged readback of its view shows it (a staged readback, not a direct screenshot, because it stages the exact view and can be repeated). When the demo has DOM text or controls, take a screenshot before `cleanup()` and check the overlay matches the view | staged native WebGPU readback, with file names |
-| Close views | Each distinct model, prop and piece of in-world text (meaningful variants, not repeated instances) captured close up, text checked against its intended wording (`webgpu-visual-verification` section 6, "Coverage"): an extra named view in a demo; a route tick, or a development-only inspection scenario labelled as an inspection view, in a prototype; or "none in this scene" | staged native WebGPU readback, with file names and each text's intended wording |
+| Close views | Each distinct model, prop and piece of in-world text (meaningful variants, not repeated instances) captured close up, text checked against its intended wording (`webgpu-visual-verification` section 6, "Coverage"): an extra named view in a demo; a route tick, or a development-only inspection scenario labelled as an inspection view, in a prototype; text as a full-size image (`keep: true` in a prototype), not a sheet tile; or "none in this scene" | staged native WebGPU readback, with file names and each text's intended wording |
 | Capture matches the screen | When direct screenshots work, one view captured both ways looks the same, checked in each prompt that reports captures (these lanes keep no record of earlier runs; a Repair may list it as not replayed) (demo: the direct steps under "Give the agent a way to look"; prototype: "Check one capture against the screen" in `scripted-playthrough.md`) | direct capture and staged readback; `blocked`, "direct screenshots unavailable", when the agent has no direct screenshot |
 | Smoothness and frame rate; interaction feel when there are controls; audio when there is sound | The user's answer | `needs-user` card |
 
@@ -151,9 +152,9 @@ The demo rows, with two differences: the scripted route's captures prove the "do
 | Hook is development-only | `__qa.info().webgpu === true` on the development server, and the build grep prints nothing | page value, command output |
 | Main route | Four to eight segments from gaining control, through the core action and one progress step, to the win, or for a game with no win (such as an endless runner) to a milestone, with an expectation for each "done when" line except those about losing or restarting; every expectation passes. "Done when" lines about losing or restarting are proved on the failure route | contact sheet, with scenario, seed and "N of N expectations passed" |
 | Failure route | A route that should fail, on its own sheet, whose expectation asserts the failure, followed by a restart | contact sheet; `not-applicable`, with the reason, when nothing can be lost, and the report then calls it a prototype, not a game (`SKILL.md`, last paragraph) |
-| Repeat run | The main route again from the same scenario and seed gives identical states and frame fingerprints | comparison result |
-| HUD | One capture kept on screen with `keep: true` and screenshotted with the real DOM HUD, whose values match the state; then `release()` | direct screenshot |
-| Live loop | `__qa.resume()` returns `resumedLiveLoop: true` and the game runs | page value |
+| Repeat run | The main route again from the same scenario and seed gives identical states and frame fingerprints (with TRAA or another jittered effect, identical states, and settled captures differing only by scattered edge pixels no larger than those between two long-settled captures of the same pose, as "Why readback frames go stale" in the `webgpu-visual-verification` skill describes; investigate larger or unexplained differences) | comparison result |
+| HUD | One capture kept on screen with `keep: true` and screenshotted with the real DOM HUD, whose values match the state; then `release()` | screenshot of the kept staged readback with the DOM HUD |
+| Live loop | `__qa.resume()` returns `resumedLiveLoop: true` and the game runs, for example the state from `__qa.getState()` changes over a few seconds | page value |
 | Controls feel, difficulty, input latency; pointer lock and mouse-look when used; gamepad or touch when supported; audio when present; frame rate | The user's answer | `needs-user` card |
 
 Write the route from the "done when" lines (this lane has no `docs/QA-ROUTE.md`, so ignore that file where `scripted-playthrough.md` mentions it) and keep it in a development-only file such as `src/qa/routes.js`, so it can run again after every fix.

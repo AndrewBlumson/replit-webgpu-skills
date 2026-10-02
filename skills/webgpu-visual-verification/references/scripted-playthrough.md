@@ -160,8 +160,16 @@ and retrying after failure.
    nondeterminism: wall-clock time, unseeded random numbers, input read from
    devices, or a scenario that does not reset everything. Equal states with
    different fingerprints mean presentation state that a scenario does not
-   reset, or animation driven by wall-clock time (temporal effects such as TRAA
-   also change fingerprints). Fix these before trusting the results.
+   reset, or animation driven by wall-clock time: fix these before trusting the
+   results. Temporal effects such as TRAA, or other jittered effects, also
+   change fingerprints: with them, states must match and settled captures may
+   differ only by scattered edge pixels no larger than those between two
+   long-settled captures of the same pose ("Why readback frames go stale" in
+   [Native WebGPU readback](native-webgpu-readback.md)); investigate larger or
+   unexplained differences. To check, give those captures `settleFrames` of 32
+   to 64, keep (`keep: true`) and screenshot a few of them from each run, add
+   two long-settled captures of one pose as the baseline, and compare the
+   screenshots.
 4. Call `__qa.resume()` when finished and check that the live game runs again.
    Its `resumedLiveLoop` is false when the game had no animation loop running
    when QA took control, so there was nothing to hand back.

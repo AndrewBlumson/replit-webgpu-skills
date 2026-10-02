@@ -42,11 +42,14 @@ into the application's development-only QA code rather than retyping them.
    different frames. Use the available browser or extended-desktop tools;
    do not assume a particular desktop, browser binary or automation tool exists.
 3. Where authorised, opening the application directly as a top-level page can
-   help isolate an embedding issue. Success there is not proof that the embedded
-   preview itself works.
+   help isolate an embedding issue. Success there is not proof of how the app
+   behaves when embedded.
 4. Confirm that the renderer has initialised and is using WebGPU, not WebGL.
-   Record the adapter type when available. A software WebGPU adapter is still
-   WebGPU, but it is not target-hardware performance evidence.
+   Record the adapter type when available; a software adapter reports
+   SwiftShader or `isFallbackAdapter` in its adapter info. A software WebGPU
+   adapter is still WebGPU, but it is not target-hardware performance evidence;
+   capture on it as "Capturing on a software adapter" (end of section 4)
+   describes.
 5. Record page errors, relevant console messages and unexpected navigation.
    Use GPU validation scopes when available. If unavailable, say so.
 
@@ -73,9 +76,10 @@ very first render**, including startup, warm-up and automatic-loop frames.
 Follow [Offscreen startup after canvas-triggered device loss](references/native-webgpu-readback.md#offscreen-startup-after-canvas-triggered-device-loss).
 Switching targets cannot recover an already-lost device.
 
-The workaround provides visual evidence around a faulty screenshot path. It
-does not repair the embedding infrastructure, provide an unavailable adapter,
-fix broken shaders or bypass browser security and cross-origin restrictions.
+The readback gives visual evidence when a direct screenshot cannot capture the
+WebGPU canvas. It does not change the page users see, provide an unavailable
+adapter, fix broken shaders or bypass browser security and cross-origin
+restrictions.
 
 ## 3. Hold a stable state during capture
 
@@ -129,6 +133,64 @@ fix broken shaders or bypass browser security and cross-origin restrictions.
 
 Keep instrumentation in development tooling. Do not add production debug
 endpoints or expose privileged application state just to take screenshots.
+
+### Capturing on a software adapter
+
+A software adapter, such as SwiftShader in a container without a GPU, draws
+each frame on the CPU. In testing on one heavy game that compiled its pipelines
+while loading, a frame took more than a second and a boot about two minutes,
+while each later capture from the same page took a few seconds. A view whose
+materials or effects were not warmed compiles them on its first capture, which
+can take far longer. So:
+
+- Plan every view a build needs and take them all in one capture session: one
+  page, moved between views through the development hook. In a game, use
+  `__qa.scenario()` and `__qa.step()` and keep QA in control until the batch is
+  done, then call `__qa.resume()` and check that the live game runs (section
+  8). In a demo, use its `__demo` views (the `aaa-threejs-game-studio` skill's
+  demo lane), calling each capture's `cleanup()` after its screenshot and
+  before the next capture. Any code change needs a fresh page and boot.
+- Run one capture browser at a time. When you launch one, give it its own
+  temporary profile folder outside the project and save its process ID to a
+  file in that folder; close it when the session ends. Before starting, close any capture
+  browser an earlier run of yours left open, through the automation tool or by
+  that profile folder or saved process ID, after checking that it is still a
+  browser using that folder. Never stop a process you did not start, such as
+  the development server, the preview or another browser. With a browser tool
+  you did not launch, keep to one tab and one page.
+- Use a browser tool you already have. If you must add a browser-automation
+  package, keep it out of the game's runtime dependencies and say so in the
+  report.
+- Expect boots of minutes: raise the automation tool's page and evaluation
+  timeouts to about ten minutes, and wait for `window.__qa` or `window.__demo`
+  rather than the page's load event. Give captures a larger `frameTimeoutMs`
+  without editing the helper: in the game adapter's `capture`, for example
+  `(options) => stageNativeWebGPUFrame({ frameTimeoutMs: 60000, ...options })`,
+  so the automatic captures of `__qa.run()` get it too. Keep each evaluation to
+  a few captures; a route can run in slices, because `run()` continues from the
+  current tick. If a boot outlasts the ten-minute timeout or a capture session
+  fails twice, stop, mark the captures `blocked` and report.
+- Skip benchmark and frame-timing loops; `renderer.info` draw, triangle and
+  memory counts still count. Never report a software adapter's frame or boot
+  times as performance.
+- Hold any adaptive quality or resolution controller at the tier under review,
+  and record it: slow frames would make it drop quality.
+- Capture at about 1280 × 720 with a device pixel ratio of 1. Change the size
+  only where a check needs it, such as text still unreadable from a closer
+  inspection view or a narrow aspect ratio the game supports, and take those
+  views last, because a resize resets temporal history.
+- Temporal effects such as TRAA or motion blur still need the settle frames in
+  "Why readback frames go stale" (`references/native-webgpu-readback.md`), each
+  of which takes a second or more here; if you use fewer, say so in that view's
+  evidence row or capture record.
+- A direct screenshot of the live WebGPU canvas can come back black in a
+  headless browser even when the game renders (section 2's known-colour test
+  tells the cases apart). Screenshot the staged readback
+  or contact sheet instead, which are ordinary page content, and mark the
+  screen comparison `blocked` ("direct screenshots unavailable"). If the staged
+  readback is also blank, diagnose scene state, readback and presentation
+  separately (section 2), and keep visual verification `blocked` until the
+  cause is established.
 
 ## 5. Prove the image shows the requested scene
 
@@ -201,6 +263,10 @@ reference.
   whenever direct screenshots work.
 - Run the route twice from the same scenario and seed and compare the states
   and frame fingerprints; differences mean hidden nondeterminism to fix first.
+  With TRAA or another jittered effect, states must match and settled captures
+  may differ only by scattered edge pixels no larger than those between two
+  long-settled captures of the same pose ("Why readback frames go stale" in
+  the readback reference); investigate larger or unexplained differences.
 - Hand control back with `__qa.resume()` and confirm the live game runs.
 
 A scripted run proves what the simulation does. Feel and difficulty, input
@@ -239,5 +305,5 @@ full-viewport fallback when the canvas is not on the page, excludes them.
 
 Present the inspected images. Report what improved, what failed, what was not
 checked and what remains below the requested quality. A still frame does not
-prove frame rate, frame pacing, input latency, audio, continuous play or the
-health of the original embedded preview.
+prove frame rate, frame pacing, input latency, audio, continuous play or how
+the app behaves when embedded.

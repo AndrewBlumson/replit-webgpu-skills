@@ -36,7 +36,7 @@ Each step must state an action and an observable result. Capture evidence after 
 - Script (segments with ticks, input and expectation):
 - Result of each expectation, with its tick:
 - Routes that should fail, and their results:
-- Repeat run gave identical states and frame fingerprints: yes / no
+- Repeat run gave identical states and frame fingerprints (with a jittered effect such as TRAA: identical states, and settled-capture differences within the long-settled baseline): yes / no
 - Contact sheet(s):
 - Checks this run cannot make (see "Needs-user checks" below):
 

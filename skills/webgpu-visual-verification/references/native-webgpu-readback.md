@@ -23,9 +23,10 @@ Browser presentation settles
 Screenshot, matching metadata and personal visual inspection
 ```
 
-This avoids relying on the broken GPU-canvas screenshot surface. It does not
-replace WebGPU with Canvas2D. It also does not repair the preview iframe for
-normal users: describe it as a capture workaround, not an iframe fix.
+This avoids depending on a screenshot path that may not capture the WebGPU
+canvas. It does not replace WebGPU with Canvas2D, and it changes nothing in how
+the app appears to users: describe it as a capture method, not a fix to the
+page.
 
 The template below was checked in minimal known-colour test scenes with
 Three.js 0.186.1 (the latest release when written) on one real GPU adapter

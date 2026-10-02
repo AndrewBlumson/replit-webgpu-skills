@@ -62,7 +62,7 @@ Blender authoring in Replit requires a configured, verified MCP connection. For 
 | HUD communicates state without hiding the playfield | not-run |  |  |
 | No placeholder, debug, provenance, or licence defect is visible | not-run |  |  |
 | Every distinct model, prop and piece of in-world text holds up at the closest view the player gets (text present, spelled correctly, not mirrored) | not-run |  |  |
-| Review rounds ran until a stopping rule in the skill's production lane ended them, and a review of the finished build finds no major problem and says the look meets the bar (each round's score, fixes and old-versus-new tally in Evidence) | not-run |  |  |
+| Review rounds ran until the user's limit or a stopping rule in the skill's production lane ended them, and a review of the finished build finds no major problem and says the look meets the bar (each round's score, fixes and old-versus-new tally in Evidence) | not-run |  |  |
 
 ## Performance and lifecycle
 

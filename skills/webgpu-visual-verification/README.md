@@ -36,7 +36,8 @@ https://docs.replit.com/features/agent/agent-customization
 ## What is covered
 
 Yes: the native WebGPU render-target readback and temporary Canvas2D presentation
-method used to get reliable scene images around the observed screenshot problem.
+method used to get reliable scene images when a direct screenshot does not
+capture the WebGPU canvas.
 It includes both stale GPU-frame and stale browser-presentation checks.
 When canvas rendering triggers device loss, it also covers fresh-device startup
 with offscreen output configured before the first render and retained until
@@ -44,10 +45,10 @@ the diagnostic render loop stops. With a game's development-only `__qa` hook
 (from the AAA Three.js Game Studio skill), it also covers scripted playthroughs
 reported as a labelled contact sheet.
 
-No: a universal fix for preview iframes, unavailable hardware, broken rendering,
-browser security restrictions, cross-origin access or real-time performance.
-The skill does not switch the application to WebGL or claim that copied pixels
-prove the original embedded preview has been repaired.
+No: a change to how the app is embedded or previewed, unavailable hardware,
+broken rendering, browser security restrictions, cross-origin access or
+real-time performance. The skill does not switch the application to WebGL or
+claim that copied pixels show how the app behaves in an embedded preview.
 
 The Three.js code and the files in `assets` are adaptation references, not an
 auto-running plugin. An agent must connect them to the actual application's

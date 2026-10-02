@@ -73,6 +73,6 @@ source. See `webgpu-cookbook.md` for working code.
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Slow or broken only in the Replit preview | The preview iframe throttles and misreports | Judge on the deployed or development URL in a full browser tab. |
+| Frame rate, pointer lock or audio differ in the Replit preview pane | The preview shows the app in an embedded frame, where browsers can limit frame rate and pointer lock | Judge on the development or deployed URL in its own browser tab. |
 | No sound | Audio started before a user gesture | Start audio from the first click or key press. |
 | Pointer lock never engages in automated tests | Pointer lock needs a real user gesture | Drive tests through the `__qa` hook; put mouse-look on the user's check card (`needs-user`). |
